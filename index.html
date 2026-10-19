@@ -2,11 +2,10 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Monitoring pipa sewerage CWIS 06</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('th')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){document.documentElement.dataset.theme='light'}</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -20,9 +19,7 @@ header{display:flex;flex-wrap:wrap;background:var(--panel);border-bottom:1px sol
 .tb.t b{font:700 22px/1.1 'Barlow Condensed',sans-serif}
 .hb{margin-left:auto;display:flex;gap:6px;align-items:center;padding:4px 12px}
 .btn{border:1px solid var(--line);background:var(--inp);border-radius:4px;padding:5px 10px;cursor:pointer}.btn:hover{border-color:var(--acc)}.btn[aria-pressed=true]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
-main{flex:1;min-height:0;display:grid;grid-template-columns:370px 1fr}
-body.min main{grid-template-columns:1fr}
-body.min aside{display:none}
+main{flex:1;min-height:0;display:grid;grid-template-columns:370px 1fr}body.min main{grid-template-columns:1fr}body.min aside{display:none}
 aside{overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:12px 14px}
 h2{font:600 15px Barlow,sans-serif;margin:16px 0 6px;padding-top:10px;border-top:1px solid var(--line)}
 #q{width:100%;padding:9px 10px;border:1px solid var(--ink);border-radius:4px;background:var(--inp)}
@@ -38,64 +35,55 @@ dl.k{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:10px 0 0}dl
 .zr{display:grid;grid-template-columns:1fr auto auto;gap:0 10px;width:100%;text-align:left;border:0;background:none;padding:5px 4px;cursor:pointer;border-bottom:1px solid var(--line)}.zr:hover,.zr.on{background:var(--bg)}.zr .bar{grid-column:1/-1}
 table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td{text-align:right;padding:3px 2px;border-bottom:1px solid var(--line);font-weight:400}table.t th:first-child,table.t td:first-child{text-align:left}table.t th{color:var(--mut)}
 .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px}
-#map{background:var(--bg);min-height:340px;position:relative; z-index: 1;}
+#map{background:var(--bg);min-height:340px;position:relative}
 #lg{position:absolute;left:12px;bottom:26px;z-index:800;background:var(--panel);border:1px solid var(--ink);padding:8px 10px;max-width:260px;font-size:13px}
 #lg .btn{display:flex;align-items:center;width:100%;margin-bottom:4px;text-align:left}#lg .btn.x{opacity:.45;text-decoration:line-through}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--ink);border-radius:4px}
 .pp{min-width:240px;max-height:55vh;overflow:auto;padding-right:4px}.pp h3{font:700 20px 'Barlow Condensed',sans-serif;margin:0}.pp .sub{margin:0 0 4px;color:var(--mut);font-size:13px}
 .pp h4{font-size:13px;margin:8px 0 2px;border-top:1px solid var(--line);padding-top:4px}.pp table{width:100%;border-collapse:collapse;font-size:13px}.pp th{text-align:left;font-weight:400;color:var(--mut);padding:1px 8px 1px 0}.pp td{text-align:right;font-weight:600}
-
-/* CSS Responsif Mobile */
+#grab,#lgT{display:none}
+.gps{width:34px;height:34px;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;background:var(--panel);border:1px solid var(--ink);border-radius:4px;color:var(--ink)}.gps[aria-pressed=true]{background:#1c7ed6;color:#fff;border-color:#1c7ed6}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2000;background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:4px;max-width:90vw;display:none;text-align:center}
+.ly{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.ly label{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:14px}.ly small{color:var(--mut)}.ly input:disabled+span{opacity:.5}
+.plbl{background:none;border:0;box-shadow:none;color:var(--ink);font:700 14px 'Barlow Condensed',sans-serif;text-shadow:0 0 3px var(--panel),0 0 3px var(--panel),0 0 3px var(--panel)}.plbl:before{display:none}
+.rwl{display:none}body.zrw .rwl{display:block}
 @media(max-width:820px){
-    body{height:100vh;overflow:hidden}
-    main{display:block; position:relative;}
-    #map{height:100%; width: 100%;}
-    aside{
-        display: block !important;
-        position: absolute;
-        top: 0; left: 0;
-        width: 80%;
-        max-width: 320px;
-        height: 100%;
-        z-index: 1000;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-    }
-    body:not(.min) aside { transform: translateX(0); }
-    .hb { display: block; }
-    header { padding-bottom: 5px; }
+ body{height:100%;overflow:hidden}
+ header .tb:not(.t){display:none}header .tb.t{padding:3px 10px}header .tb.t small{display:none}header .tb.t b{font-size:18px}
+ #lgT{display:inline-block}#tg{display:none}
+ main{display:block;position:relative;flex:1}
+ #map{position:absolute;inset:0;min-height:0;height:auto}
+ aside{position:absolute;left:0;right:0;bottom:0;z-index:900;height:var(--sh,100px);border:0;border-top:1px solid var(--ink);border-radius:14px 14px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.28);padding:0 12px calc(16px + env(safe-area-inset-bottom,0px));transition:height .2s}
+ body.sh1 aside{--sh:48vh}body.sh2 aside{--sh:88vh}body.min aside{display:block}
+ #grab{display:block;position:sticky;top:0;z-index:2;width:100%;height:26px;border:0;background:var(--panel);cursor:pointer}
+ #grab:after{content:'';display:block;width:44px;height:5px;border-radius:3px;background:var(--mut);margin:10px auto 0}
+ .leaflet-control-zoom{display:none}
+ #lg{display:none;bottom:118px;max-width:220px}body.lgon #lg{display:block}
+ .btn,select,#q{min-height:42px}.ly input{width:20px;height:20px}
+ .pp{min-width:0;max-height:36vh}
+ #toast{bottom:120px}
 }
 </style>
 </head>
 <body>
-<!-- Script agar di HP panel otomatis tertutup sejak awal, tapi di laptop terbuka -->
-<script>if(window.innerWidth <= 820) document.body.classList.add('min');</script>
-
 <header>
 <div class="tb t"><small>Paket CWIS 06</small><b>Monitoring pipa sewerage</b></div>
 <div class="tb"><small>Lokasi</small><b>Banjardowo dan Genuksari</b></div>
 <div class="tb"><small>Data diperbarui</small><b id="upd">–</b></div>
-<div class="tb"><small>Total Lateral</small><b id="tbLen">–</b></div>
-<div class="hb"><button class="btn" id="tg" title="Tampilkan atau sembunyikan panel">Panel</button><button class="btn" id="th" title="Ganti tema terang atau gelap">Tema</button></div>
+<div class="tb"><small>Panjang tergambar</small><b id="tbLen">–</b></div>
+<div class="hb"><button class="btn" id="lgT">Legenda</button><button class="btn" id="tg" title="Tampilkan atau sembunyikan panel">Panel</button><button class="btn" id="th" title="Ganti tema terang atau gelap">Tema</button></div>
 </header>
 <main>
 <aside>
-<input id="q" type="search" placeholder="Cari MHJ_06_0773, nama jalan, material" autocomplete="off" aria-label="Cari manhole atau pipa">
+<button id="grab" aria-label="Geser panel"></button>
+<input id="q" type="search" placeholder="Cari MHJ_06_0773, MH_06_..., nama jalan, material" autocomplete="off" aria-label="Cari manhole atau pipa">
 <ul id="res" role="listbox"></ul><p class="sm" id="rc">Tekan / untuk mencari. Pencarian mencakup semua atribut.</p>
-<h2>Tampilan Peta</h2>
+<h2>Tampilan peta</h2>
 <div class="seg"><button class="btn" data-c="method" aria-pressed="true">Metode</button><button class="btn" data-c="progress" aria-pressed="false">Progres</button></div>
+<h2>Layer peta</h2><div class="ly" id="ly"></div>
 <h2>Progres pipa</h2>
 <div class="pg"><span class="sm">Berbobot panjang gambar</span><br><b id="kPct">0%</b><div class="bar"><i id="kBar" style="width:0"></i></div>
-<dl class="k">
-  <dt>Pipa Lateral</dt><dd id="kLen">–</dd>
-  <dt>Pipa Collecting</dt><dd id="cpLen">0,00 km</dd>
-  <dt>Pipa Persil</dt><dd id="ppLen">0,00 km</dd>
-  <dt>Lateral Terpasang</dt><dd id="kDone">–</dd>
-  <dt>Ruas Lateral</dt><dd id="kN">–</dd>
-  <dt>Manhole Selesai</dt><dd id="kMh">–</dd>
-</dl>
-</div>
+<dl class="k"><dt>Panjang tergambar</dt><dd id="kLen">–</dd><dt>Terpasang setara</dt><dd id="kDone">–</dd><dt>Ruas pipa</dt><dd id="kN">–</dd><dt>Manhole selesai</dt><dd id="kMh">–</dd></dl></div>
 <h2>Filter</h2>
 <div class="fl">
 <div><label for="fZone">Zona</label><select id="fZone"><option value="">Semua</option></select></div>
@@ -110,8 +98,8 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td
 </aside>
 <div id="map"><div id="lg"></div></div>
 </main>
+<div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
 <script>
 const $=i=>document.getElementById(i);
 const fmt=(n,d=1)=>n==null?'–':n.toLocaleString('id-ID',{maximumFractionDigits:d,minimumFractionDigits:d});
@@ -120,23 +108,18 @@ const JK='#e8590c',OT='#0b7a8a',MX='#7048b8',G0='#8d9ba3';
 const prog=p=>p>=100?'#2eaa5c':p>=50?'#2f7fe0':p>0?'#f0a020':G0;
 const st=p=>p>=100?'selesai':p>0?'berjalan':'belum';
 const pc=p=>p.progress_pct||0;
-const dep=(g,i)=>g==null||i==null?null:g-i;
+const dep=(g,i)=>g==null||i==null?null:g-i;   // kedalaman = GL - invert (berlaku untuk invert negatif maupun positif)
 const lowIE=p=>{const a=[p.invert_elev,p.elev_downstream,p.elev_upstream_1,p.elev_upstream_2,p.elev_upstream_3].filter(v=>v!=null);return a.length?Math.min(...a):null};
 const badIE=p=>p.invert_elev!=null&&p.elev_downstream!=null&&p.invert_elev>p.elev_downstream+0.005;
 const REF=new Set(['MHJ_06_02_0150','MH-0282']);
 const isRef=p=>REF.has(p.manhole_id)||p.is_reference===true||p.is_reference==='true';
 let PIPES,MH,IDX=[],hits=[],sel=-1,hl=null,cMode='method';
 const mm=new Map(),byId=new Map(),f={zone:'',cls:'',st:''},off=new Set();
-
-// 1. Inisialisasi peta langsung dengan koordinat tengah Semarang agar basemap langsung muncul
-const map=L.map('map',{preferCanvas:true,zoomControl:false}).setView([-6.955, 110.479], 14);
-L.control.zoom({position:'topright'}).addTo(map);
-L.control.locate({position: 'topleft', strings: { title: "Tampilkan lokasi saya" }, locateOptions: { maxZoom: 16 }}).addTo(map);
-
-// 2. Tampilkan Peta Jalan Dasar (OSM) sejak awal (sebelum data selesai di-download)
-const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+const map=L.map('map',{preferCanvas:true,zoomControl:false});L.control.zoom({position:'topright'}).addTo(map);
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
 const grp=L.featureGroup().addTo(map);
-
+map.createPane('pz').style.zIndex=300;map.createPane('pm').style.zIndex=650;
+const SL={zona:L.featureGroup(),rw:L.featureGroup(),collect:L.featureGroup(),persil:L.featureGroup(),ic:L.featureGroup(),hi:L.featureGroup()},sById=new Map(),vis={pipe:true,mh:true,collect:true,persil:true,ic:true,hi:true,zona:true,rw:false},have={};
 L.DomEvent.disableClickPropagation($('lg'));
 const mmeth=id=>{const s=mm.get(id);return !s?null:s.size>1?'Campuran':[...s][0]};
 const colP=p=>cMode==='progress'?prog(p.progress_pct):p.method==='Jacking'?JK:OT;
@@ -144,7 +127,6 @@ const colM=p=>{if(cMode==='progress')return prog(p.progress_pct);const m=mmeth(p
 const row=(a,b)=>b==null||b===''?'':'<tr><th>'+a+'</th><td>'+b+'</td></tr>';
 const m3=v=>v==null?null:fmt(v,3)+' m';
 const progRows=p=>'<h4>Progres</h4><table>'+row('Tahap',esc(p.stage_label))+row('Progres',fmt(pc(p),0)+'%')+row('Rencana',p.plan_date)+row('Realisasi',p.actual_date)+'</table>';
-
 function popP(p){return '<div class="pp"><h3>'+esc(p.pipe_id)+'</h3><p class="sub">'+esc(p.pipe_type)+', '+esc(p.method)+', '+esc(p.material)+', Ø'+fmt(p.diameter_mm,0)+' mm</p><table>'+
  row('Dari manhole',esc(p.from_mh))+row('Ke manhole',esc(p.to_mh))+row('Panjang',p.length_m==null?null:fmt(p.length_m,2)+' m')+row('Slope',p.slope_pct==null?null:fmt(p.slope_pct,2)+' %')+row('Lokasi',esc(p.location_name))+row('Zona',p.zone)+
  '</table><h4>Ujung hulu</h4><table>'+row('Muka tanah (GL)',m3(p.up_gl))+row('Invert',m3(p.up_ie))+row('Kedalaman (GL − invert)',m3(dep(p.up_gl,p.up_ie)))+
@@ -154,25 +136,22 @@ function popM(p){if(isRef(p))return '<div class="pp"><h3>'+esc(p.manhole_id)+'</
  row('Lokasi',esc(p.location_name))+row('Zona',p.zone)+row('Metode pipa',mmeth(p.manhole_id))+
  '</table><h4>Elevasi</h4><table>'+row('Muka tanah (GL)',m3(p.ground_elev))+row('Invert dasar manhole',m3(p.invert_elev))+row('Invert hulu 1',m3(p.elev_upstream_1))+row('Invert hulu 2',m3(p.elev_upstream_2))+row('Invert hulu 3',m3(p.elev_upstream_3))+row('Invert hilir',m3(p.elev_downstream))+
  '</table><h4>Kedalaman (GL − invert)</h4><table>'+row('Ke invert terdalam',m3(dep(p.ground_elev,lowIE(p))))+row('Ke invert hilir',m3(dep(p.ground_elev,p.elev_downstream)))+row('Ke dasar manhole (data)',m3(dep(p.ground_elev,p.invert_elev)))+(badIE(p)?'<tr><th colspan="2" style="color:#d9480f">Invert dasar manhole lebih tinggi dari invert pipa. Cek data.</th></tr>':'')+'</table>'+progRows(p)+'</div>'}
-
 const okZ=p=>!f.zone||String(p.zone)===f.zone,okS=p=>!f.st||st(p.progress_pct)===f.st;
 const okP=p=>okZ(p)&&okS(p)&&(!f.cls||p.pipe_type===f.cls)&&!off.has(p.method);
 const okM=p=>{const s=mm.get(p.manhole_id);return okZ(p)&&okS(p)&&(!f.cls||p.mh_type===f.cls)&&(!s||[...s].some(m=>!off.has(m)))};
 const bar=p=>'<div class="bar"><i style="width:'+Math.min(100,p)+'%"></i></div>';
-
 function agg(list,kf){const g={};list.forEach(x=>{const p=x.properties,k=kf(p),l=p.length_m||0;(g[k]=g[k]||{n:0,l:0,d:0});g[k].n++;g[k].l+=l;g[k].d+=l*pc(p)/100});return g}
 function legend(){$('lg').innerHTML=(cMode==='method'?['Jacking','Open Trench'].map(k=>'<button class="btn'+(off.has(k)?' x':'')+'" data-m="'+k+'" title="Klik untuk menyembunyikan atau menampilkan"><i class="sw" style="background:'+(k==='Jacking'?JK:OT)+'"></i>'+k+'</button>').join('')+'<div><i class="sw" style="background:'+MX+'"></i>Manhole di sambungan kedua metode</div>':
  [['Belum mulai',G0],['1–49%','#f0a020'],['50–99%','#2f7fe0'],['Selesai','#2eaa5c']].map(a=>'<div><i class="sw" style="background:'+a[1]+'"></i>'+a[0]+'</div>').join(''))+'<p class="sm">Tebal garis menunjukkan kelas pipa. Lingkaran putus-putus adalah manhole paket sebelah.</p>'}
-
 function render(fit){
  grp.clearLayers();byId.clear();
  const P=PIPES.features.filter(x=>okP(x.properties)),M=MH.features.filter(x=>okM(x.properties)),W={Primary:5,Secondary:3.5,Tertiary:2.5};
- L.geoJSON({type:'FeatureCollection',features:P},{style:x=>({color:colP(x.properties),weight:W[x.properties.pipe_type]||3,opacity:.92}),onEachFeature:(x,l)=>{const p=x.properties,w=W[p.pipe_type]||3;byId.set(p.pipe_id,l);
+ if(vis.pipe)L.geoJSON({type:'FeatureCollection',features:P},{style:x=>({color:colP(x.properties),weight:W[x.properties.pipe_type]||3,opacity:.92}),onEachFeature:(x,l)=>{const p=x.properties,w=W[p.pipe_type]||3;byId.set(p.pipe_id,l);
   l.bindPopup(()=>popP(p),{maxWidth:340}).bindTooltip(p.pipe_id,{sticky:true});l.on({mouseover:()=>{l.setStyle({weight:w+3});l.bringToFront()},mouseout:()=>l.setStyle({weight:w})})}}).addTo(grp);
- M.forEach(x=>{const p=x.properties,r=isRef(p);
+ if(vis.mh)M.forEach(x=>{const p=x.properties,r=isRef(p);
   const mk=L.circleMarker([x.geometry.coordinates[1],x.geometry.coordinates[0]],r?{radius:6,color:G0,weight:2,dashArray:'2 2',fillOpacity:0}:{radius:p.shaft?6:4,color:'#fff',weight:1.2,fillColor:colM(p),fillOpacity:1}).bindPopup(()=>popM(p),{maxWidth:340}).bindTooltip(p.manhole_id,{sticky:true}).addTo(grp);byId.set(p.manhole_id,mk)});
  const tot=P.reduce((s,x)=>s+(x.properties.length_m||0),0),dn=P.reduce((s,x)=>s+(x.properties.length_m||0)*pc(x.properties)/100,0),pct=tot?100*dn/tot:0,Mn=M.filter(x=>!isRef(x.properties));
- $('kPct').textContent=fmt(pct)+'%';$('kBar').style.width=pct+'\%';$('kLen').textContent=fmt(tot/1000,2)+' km';$('kDone').textContent=fmt(dn/1000,2)+' km';$('kN').textContent=P.length;
+ $('kPct').textContent=fmt(pct)+'%';$('kBar').style.width=pct+'%';$('kLen').textContent=fmt(tot/1000,2)+' km';$('kDone').textContent=fmt(dn/1000,2)+' km';$('kN').textContent=P.length;
  $('kMh').textContent=Mn.filter(x=>pc(x.properties)>=100).length+' / '+Mn.length;
  const z=agg(P,p=>p.zone==null?'-':String(p.zone));
  $('zones').innerHTML=Object.keys(z).sort((a,b)=>a-b).map(k=>{const v=z[k],q=v.l?100*v.d/v.l:0;return '<button class="zr'+(f.zone===k?' on':'')+'" data-z="'+k+'"><span>'+(k==='-'?'Tanpa zona':'Zona '+k)+'</span><span>'+fmt(v.l/1000,2)+' km</span><b>'+fmt(q)+'%</b>'+bar(q)+'</button>'}).join('')||'<p class="sm">Tidak ada data.</p>';
@@ -180,51 +159,76 @@ function render(fit){
  $('cls').innerHTML=Object.keys(c).sort().map(k=>{const v=c[k],[a,b]=k.split('|');return '<tr><td><i class="sw" style="background:'+(b==='Jacking'?JK:OT)+'"></i>'+esc(a)+', '+esc(b)+'</td><td>'+v.n+'</td><td>'+fmt(v.l/1000,2)+'</td><td>'+fmt(v.l?100*v.d/v.l:0)+'</td></tr>'}).join('');
  if(fit&&grp.getLayers().length)map.fitBounds(grp.getBounds().pad(.06),{maxZoom:19});
 }
-
 function resetFilters(){f.zone=f.cls=f.st='';off.clear();['fZone','fCls','fSt'].forEach(i=>$(i).value='');legend()}
 const hay=p=>Object.values(p).filter(v=>v!=null&&v!=='').join(' ').toLowerCase();
-const subt=i=>{const p=i.f.properties;return i.t==='p'?p.method+', '+p.pipe_type+', Ø'+fmt(p.diameter_mm,0)+', '+fmt(p.length_m,1)+' m, zona '+p.zone:(isRef(p)?'Paket sebelah':(p.mh_type||'')+(p.shaft?', shaft '+p.shaft:'')+', zona '+p.zone)};
-
-function draw(){const sh=hits.slice(0,8),q=$('q').value.trim();$('res').innerHTML=sh.map((i,k)=>'<li role="option" data-i="'+k+'" class="'+(k===sel?'on':'')+'"><b>'+esc(i.id)+'</b><small>'+esc((i.t==='p'?'Pipa: ':'Manhole: ')+subt(i))+'</small></li>').join('');
+const subt=i=>{const p=i.f.properties;if(i.t!=='p'&&i.t!=='m')return [p.hi_code||p.ic_type,p.zone_no==null?null:'zona '+p.zone_no,p.rw_label].filter(Boolean).join(', ');return i.t==='p'?p.method+', '+p.pipe_type+', Ø'+fmt(p.diameter_mm,0)+', '+fmt(p.length_m,1)+' m, zona '+p.zone:(isRef(p)?'Paket sebelah':(p.mh_type||'')+(p.shaft?', shaft '+p.shaft:'')+', zona '+p.zone)};
+function draw(){const sh=hits.slice(0,8),q=$('q').value.trim();
+ $('res').innerHTML=sh.map((i,k)=>'<li role="option" data-i="'+k+'" class="'+(k===sel?'on':'')+'"><b>'+esc(i.id)+'</b><small>'+esc((KIND[i.t]||'')+': '+subt(i))+'</small></li>').join('');
  $('rc').textContent=q?(hits.length?hits.length+' hasil'+(hits.length>8?', 8 teratas ditampilkan':''):'Tidak ada hasil'):'Tekan / untuk mencari. Pencarian mencakup semua atribut.'}
-
-function search(v){const q=v.trim().toLowerCase();sel=-1;if(!q){hits=[];return draw()}
+function search(v){const q=v.trim().toLowerCase();sel=-1;if(!q){hits=[];clearHl();return draw()}
  const t=q.split(/\s+/),r=i=>{const d=i.id.toLowerCase();return d.startsWith(q)?0:d.includes(q)?1:2};
  hits=IDX.filter(i=>t.every(w=>i.h.includes(w))).sort((a,b)=>r(a)-r(b));draw()}
-
-function clearHighlight(){
-    if(hl) { map.removeLayer(hl); hl = null; }
-}
-
-function go(i){$('q').value=i.id;hits=[];draw();if(!byId.has(i.id)){resetFilters();render(false)}
- const l=byId.get(i.id);if(!l)return;
- clearHighlight(); 
+function go(i){$('q').value=i.id;hits=[];draw();if(mob()){sh(0);$('q').blur()}const isS=sById.has(i.id);if(isS&&!map.hasLayer(SL[i.t])){vis[i.t]=true;lyDraw();SL[i.t].addTo(map)}if(!isS&&!byId.has(i.id)){resetFilters();render(false)}
+ const l=byId.get(i.id)||sById.get(i.id);if(!l)return;clearHl();seek=true;setTimeout(()=>{seek=false},2500);
  hl=L.geoJSON(i.f,{style:{color:'#ffd43b',weight:12,opacity:.7},pointToLayer:(x,ll)=>L.circleMarker(ll,{radius:14,color:'#ffd43b',weight:5,fillOpacity:0})}).addTo(map);hl.eachLayer(x=>x.bringToBack());
- if(i.t==='p'){map.fitBounds(l.getBounds().pad(.6),{maxZoom:19});setTimeout(()=>l.openPopup(l.getBounds().getCenter()),350)}
+ if(i.t==='p'||i.t==='collect'||i.t==='persil'){map.fitBounds(l.getBounds().pad(.6),{maxZoom:19});setTimeout(()=>l.openPopup(l.getBounds().getCenter()),350)}
  else{map.flyTo(l.getLatLng(),Math.max(map.getZoom(),18),{duration:.6});setTimeout(()=>l.openPopup(),700)}}
-map.on('popupclose',()=>setTimeout(()=>{if(hl&&!map._popup){clearHighlight()}},50));
-
-$('tg').onclick=()=>{
-    document.body.classList.toggle('min');
-    setTimeout(()=>map.invalidateSize(),300);
-};
-
-$('th').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('th',t)}catch(e){}};$('cOsm').onchange=e=>e.target.checked?osm.addTo(map):map.removeLayer(osm);
+let seek=false;const clearHl=()=>{if(hl){map.removeLayer(hl);hl=null}};
+map.on('popupopen',()=>{seek=false});map.on('popupclose',()=>{if(!seek)clearHl()});map.on('click',clearHl);
+$('tg').onclick=()=>{document.body.classList.toggle('min');setTimeout(()=>map.invalidateSize(),150)};
+$('th').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('th',t)}catch(e){}};
+$('cOsm').onchange=e=>e.target.checked?osm.addTo(map):map.removeLayer(osm);
 document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cMode=b.dataset.c;document.querySelectorAll('[data-c]').forEach(x=>x.setAttribute('aria-pressed',x===b));legend();if(PIPES)render(false)});
 $('lg').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;off.has(b.dataset.m)?off.delete(b.dataset.m):off.add(b.dataset.m);legend();render(true)};
 [['fZone','zone'],['fCls','cls'],['fSt','st']].forEach(([id,k])=>$(id).onchange=e=>{f[k]=e.target.value;render(true)});
-$('bReset').onclick=()=>{resetFilters();render(true)};$('zones').onclick=e=>{const b=e.target.closest('.zr');if(!b||b.dataset.z==='-')return;f.zone=f.zone===b.dataset.z?'':b.dataset.z;$('fZone').value=f.zone;render(true)};$('q').addEventListener('input',e=>{
-    search(e.target.value);
-    if(e.target.value.trim() === '') clearHighlight();
-});
-$('q').addEventListener('keydown',e=>{const n=Math.min(hits.length,8); if(e.key==='ArrowDown'\vert{}\vert{}e.key==='ArrowUp'){e.preventDefault();sel=Math.max(0,Math.min(n-1,sel+(e.key==='ArrowDown'?1:-1)));draw()} else if(e.key==='Enter'&&n)go(hits[Math.max(sel,0)]);else if(e.key==='Escape'){e.target.value='';search(''); clearHighlight();}});$('res').addEventListener('mousedown',e=>{const li=e.target.closest('li');if(li)go(hits[+li.dataset.i])});
+$('bReset').onclick=()=>{resetFilters();render(true)};
+$('zones').onclick=e=>{const b=e.target.closest('.zr');if(!b||b.dataset.z==='-')return;f.zone=f.zone===b.dataset.z?'':b.dataset.z;$('fZone').value=f.zone;render(true)};
+$('q').addEventListener('input',e=>search(e.target.value));
+$('q').addEventListener('keydown',e=>{const n=Math.min(hits.length,8);
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel=Math.max(0,Math.min(n-1,sel+(e.key==='ArrowDown'?1:-1)));draw()}
+ else if(e.key==='Enter'&&n)go(hits[Math.max(sel,0)]);else if(e.key==='Escape'){e.target.value='';search('')}});
+$('res').addEventListener('mousedown',e=>{const li=e.target.closest('li');if(li)go(hits[+li.dataset.i])});
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$('q').focus()}});
+const KIND={p:'Pipa lateral',m:'Manhole',collect:'Pipa collecting',persil:'Pipa persil',ic:'Inspection chamber',hi:'House inlet'};
+const SP=[{k:'zona',f:'zona',t:'Zona',id:'zone_name'},{k:'rw',f:'batas_rw',t:'Batas RW',id:'rw_label'},{k:'collect',f:'collecting_pipe',t:'Pipa collecting',id:'cp_id'},{k:'persil',f:'persil_pipe',t:'Pipa persil',id:'pp_id'},{k:'ic',f:'inspection_chamber',t:'Inspection chamber',id:'ic_id'},{k:'hi',f:'house_inlet',t:'House inlet',id:'hi_id'}];
+const HIC={HI:'#f59f00',HIP:'#f59f00',SR:'#4dabf7'},SKIP=new Set(['attrs','fid','geom','updated_at','stage_code']);
+const nv=(k,v)=>typeof v==='boolean'?(v?'ya':'tidak'):typeof v!=='number'?esc(v):/lon|lat/.test(k)?v.toFixed(6):fmt(v,Number.isInteger(v)?0:3);
+const popG=(p,t,k)=>'<div class="pp"><h3>'+esc(p[k])+'</h3><p class="sub">'+t+'</p><table>'+Object.entries(p).filter(([a,v])=>!SKIP.has(a)&&a!==k&&v!=null&&v!=='').map(([a,v])=>row(esc(a.replace(/_/g,' ')),nv(a,v))).join('')+'</table></div>';
+function buildStatic(s,g){const G=SL[s.k],poly=s.k==='zona'||s.k==='rw';
+ g.features.forEach(x=>{const p=x.properties,id=p[s.id];let l,inner;
+  if(x.geometry.type==='Point'){const c=x.geometry.coordinates;inner=l=L.circleMarker([c[1],c[0]],s.k==='ic'?{radius:5,color:'#fff',weight:1.2,fillColor:'#d6336c',fillOpacity:1}:{radius:3,color:'#fff',weight:.6,fillColor:HIC[p.hi_code]||'#f59f00',fillOpacity:1})}
+  else{l=L.geoJSON(x,poly?{pane:'pz',interactive:false,style:{color:s.k==='zona'?'#7048b8':'#868e96',weight:s.k==='zona'?2.5:1.2,dashArray:s.k==='zona'?'8 5':'3 4',fillOpacity:.05}}:{style:{color:s.k==='collect'?'#c2255c':'#868e96',weight:s.k==='collect'?2.5:1.5,dashArray:s.k==='persil'?'2 4':null}});l.eachLayer(y=>{inner=y})}
+  if(poly)inner.bindTooltip(String(id),{permanent:true,direction:'center',className:'plbl'+(s.k==='rw'?' rwl':'')});
+  else{inner.bindPopup(()=>popG(p,s.t,s.id),{maxWidth:340}).bindTooltip(String(id),{sticky:true});sById.set(id,inner);IDX.push({t:s.k,f:x,id:String(id),h:hay(p)})}
+  G.addLayer(l)});
+ have[s.k]=g.features.length}
+const LY=[['pipe','Pipa lateral'],['mh','Manhole'],['collect','Pipa collecting'],['persil','Pipa persil'],['ic','Inspection chamber'],['hi','House inlet'],['zona','Zona'],['rw','Batas RW']];
+function lyDraw(){$('ly').innerHTML=LY.map(([k,n])=>{const has=k==='pipe'||k==='mh'||have[k];return '<label><input type="checkbox" data-l="'+k+'"'+(vis[k]&&has?' checked':'')+(has?'':' disabled')+'><span>'+n+(has?'':' <small>(belum ada data)</small>')+(have[k]?' <small>'+fmt(have[k],0)+(k==='hi'?', terlihat dari zoom 16':'')+'</small>':'')+'</span></label>'}).join('')}
+function syncStatic(){Object.keys(SL).forEach(k=>{const on=vis[k]&&have[k]&&(k!=='hi'||map.getZoom()>=16);on?SL[k].addTo(map):map.removeLayer(SL[k])});document.body.classList.toggle('zrw',map.getZoom()>=15)}
+map.on('zoomend',syncStatic);
+$('ly').onchange=e=>{const k=e.target.dataset.l;vis[k]=e.target.checked;syncStatic();if(k==='pipe'||k==='mh')render(false)};
+let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>{t.style.display='none'},3500)};
+const GPS=L.Control.extend({options:{position:'topright'},onAdd(){const b=L.DomUtil.create('button','gps');b.id='gps';b.title='Lokasi saya (GPS)';b.setAttribute('aria-label','Lokasi saya');b.setAttribute('aria-pressed','false');b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>';L.DomEvent.disableClickPropagation(b);b.onclick=gpsToggle;return b}});
+map.addControl(new GPS());
+let me=null,acc=null,first=true;
+function gpsToggle(){const b=$('gps');
+ if(b.getAttribute('aria-pressed')==='true'){map.stopLocate();[me,acc].forEach(x=>x&&map.removeLayer(x));me=acc=null;b.setAttribute('aria-pressed','false');toast('GPS dimatikan');return}
+ if(!navigator.geolocation){toast('Perangkat ini tidak mendukung GPS');return}
+ first=true;b.setAttribute('aria-pressed','true');toast('Mencari lokasi...');map.locate({watch:true,enableHighAccuracy:true,setView:false,maximumAge:5000})}
+map.on('locationfound',e=>{
+ if(!me){acc=L.circle(e.latlng,{pane:'pm',interactive:false,radius:e.accuracy,color:'#1c7ed6',weight:1,fillOpacity:.12}).addTo(map);me=L.circleMarker(e.latlng,{pane:'pm',interactive:false,radius:8,color:'#fff',weight:3,fillColor:'#1c7ed6',fillOpacity:1}).addTo(map)}
+ else{me.setLatLng(e.latlng);acc.setLatLng(e.latlng).setRadius(e.accuracy)}
+ if(first){first=false;map.flyTo(e.latlng,Math.max(map.getZoom(),18))}toast('Akurasi sekitar '+Math.round(e.accuracy)+' m')});
+map.on('locationerror',e=>{$('gps').setAttribute('aria-pressed','false');map.stopLocate();toast(e.code===1?'Izin lokasi ditolak. Aktifkan izin lokasi untuk situs ini di pengaturan browser.':'Lokasi belum didapat. Pastikan GPS aktif dan coba di tempat terbuka.')});
+const mob=()=>matchMedia('(max-width:820px)').matches,sh=n=>{document.body.classList.remove('sh1','sh2');if(n)document.body.classList.add('sh'+n);document.body.dataset.sh=n};
+$('grab').onclick=()=>sh(((+document.body.dataset.sh||0)+1)%3);
+$('q').addEventListener('focus',()=>{if(mob()&&!+document.body.dataset.sh)sh(1)});
+map.on('click',()=>{if(mob()&&+document.body.dataset.sh)sh(0)});
+$('lgT').onclick=()=>document.body.classList.toggle('lgon');
 legend();
-
 const NUM=['length_m','slope_pct','progress_pct','diameter_mm','depth_m','ground_elev','invert_elev','elev_downstream','elev_upstream_1','elev_upstream_2','elev_upstream_3','up_gl','up_ie','up_depth','lw_gl','lw_ie','lw_depth','drop_m'];
-const norm=g=>{if(!g||!g.features)return g; g.features=g.features.filter(x=>x.geometry);g.features.forEach(x=>NUM.forEach(k=>{if(k in x.properties){const v=x.properties[k];x.properties[k]=(v===null||v===undefined||v==='')?null:Number(v)}}));return g};
+const norm=g=>{g.features=g.features.filter(x=>x.geometry);g.features.forEach(x=>NUM.forEach(k=>{if(k in x.properties){const v=x.properties[k];x.properties[k]=(v===null||v===undefined||v==='')?null:Number(v)}}));return g};
 const get=u=>fetch(u,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error(u+' ('+r.status+')');return r.json().then(j=>({j,lm:r.headers.get('Last-Modified')}))});
-
 function start(){
  PIPES.features.forEach(x=>{const p=x.properties;[p.from_mh,p.to_mh].forEach(id=>{if(!mm.has(id))mm.set(id,new Set());mm.get(id).add(p.method)})});
  IDX=PIPES.features.map(x=>({t:'p',f:x,id:x.properties.pipe_id,h:hay(x.properties)})).concat(MH.features.map(x=>({t:'m',f:x,id:x.properties.manhole_id,h:hay(x.properties)+' '+(mmeth(x.properties.manhole_id)||'').toLowerCase()})));
@@ -232,66 +236,14 @@ function start(){
  opt('fZone',[...new Set(PIPES.features.concat(MH.features).map(x=>x.properties.zone).filter(z=>z!=null))].sort((a,b)=>a-b).map(z=>[String(z),'Zona '+z]));
  opt('fCls',['Primary','Secondary','Tertiary'].map(c=>[c,c]));
  $('tbLen').textContent=fmt(PIPES.features.reduce((s,x)=>s+(x.properties.length_m||0),0)/1000,2)+' km';
- 
- // Fitbounds hanya jika data utama berhasil diload
- if(PIPES.features && PIPES.features.length > 0) {
-     map.fitBounds(L.geoJSON(PIPES).getBounds().pad(.05));
- }
- render(false);
+ osm.addTo(map);map.fitBounds(L.geoJSON(PIPES).getBounds().pad(.05));render(false);lyDraw();
+ Promise.allSettled(SP.map(s=>get('data/'+s.f+'.geojson').then(r=>{r.j.features=r.j.features.filter(x=>x.geometry);buildStatic(s,r.j)}))).then(()=>{lyDraw();syncStatic()});
 }
-
-Promise.all([
-    get('data/v_lateral_pipe.geojson'),
-    get('data/v_manhole.geojson'),
-    get('data/house_inlet.geojson').catch(() => ({j: null})),
-    get('data/inspection_chamber.geojson').catch(() => get('data/ic.geojson')).catch(() => ({j: null})),
-    get('data/collecting_pipe.geojson').catch(() => ({j: null})),
-    get('data/persil_pipe.geojson').catch(() => ({j: null})),
-    get('data/zona.geojson').catch(() => ({j: null})),
-    get('data/batas_rw.geojson').catch(() => ({j: null}))
-]).then(([a, b, hi, ic, cp, pp, zn, rw])=>{
- PIPES=norm(a.j); MH=norm(b.j);
+Promise.all([get('data/v_lateral_pipe.geojson'),get('data/v_manhole.geojson')]).then(([a,b])=>{
+ PIPES=norm(a.j);MH=norm(b.j);
  const lm=a.lm||b.lm;if(lm)$('upd').textContent=new Date(lm).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
- 
- const pRW = f => `<div class="pp"><h3>${esc(f.properties.rw_label)}</h3><p class="sub">Kelurahan ${esc(f.properties.kelurahan)}</p></div>`;
- const pZn = f => `<div class="pp"><h3>Zona ${esc(f.properties.zone_no)}</h3><p class="sub">${esc(f.properties.zone_name)}</p></div>`;
- const pCP = f => `<div class="pp"><h3>${esc(f.properties.cp_id)}</h3><p class="sub">Collecting Pipe</p><table><tr><th>Panjang</th><td>${fmt(f.properties.length_m, 2)} m</td></tr></table></div>`;
- const pPP = f => `<div class="pp"><h3>${esc(f.properties.pp_id)}</h3><p class="sub">Persil Pipe</p><table><tr><th>Panjang</th><td>${fmt(f.properties.length_m, 2)} m</td></tr></table></div>`;
- const pHI = f => `<div class="pp"><h3>${esc(f.properties.hi_id)}</h3><p class="sub">House Inlet (${esc(f.properties.hi_code)})</p><table><tr><th>Elevasi</th><td>${fmt(f.properties.elevation, 3)} m</td></tr></table></div>`;
- const pIC = f => `<div class="pp"><h3>${esc(f.properties.ic_id)}</h3><p class="sub">IC (Inspection Chamber) - ${esc(f.properties.ic_type)}</p><table><tr><th>Elevasi</th><td>${fmt(f.properties.elevation, 3)} m</td></tr></table></div>`;
-
- const extraLayers = {};
-
- if(zn && zn.j) extraLayers["Batas Zona"] = L.geoJSON(zn.j, { style: {color: '#8d9ba3', weight: 2, fillOpacity: 0.1} }).bindPopup(l => pZn(l.feature)).addTo(map);
- if(rw && rw.j) extraLayers["Batas RW"] = L.geoJSON(rw.j, { style: {color: '#586b73', weight: 2, dashArray: '4 4', fillOpacity: 0} }).bindPopup(l => pRW(l.feature)).addTo(map);
- 
- if(cp && cp.j) {
-     let cpTot = 0;
-     if(cp.j.features) cpTot = cp.j.features.reduce((s, x) => s + (Number(x.properties.length_m) || 0), 0);
-     $('cpLen').textContent = fmt(cpTot / 1000, 2) + ' km';
-     extraLayers["Collecting Pipe"] = L.geoJSON(cp.j, { style: {color: '#f0a020', weight: 4} }).bindPopup(l => pCP(l.feature)).addTo(map);
- }
- 
- if(pp && pp.j) {
-     let ppTot = 0;
-     if(pp.j.features) ppTot = pp.j.features.reduce((s, x) => s + (Number(x.properties.length_m) || 0), 0);
-     $('ppLen').textContent = fmt(ppTot / 1000, 2) + ' km';
-     extraLayers["Persil Pipe"] = L.geoJSON(pp.j, { style: {color: '#3fb6c6', weight: 2, dashArray: '4 4'} }).bindPopup(l => pPP(l.feature)).addTo(map);
- }
- 
- if(ic && ic.j) extraLayers["IC (Inspection Chamber)"] = L.geoJSON(ic.j, { pointToLayer: (f, ll) => L.circleMarker(ll, {radius: 5, fillColor: '#2eaa5c', color: '#fff', weight: 1.5, fillOpacity: 1}) }).bindPopup(l => pIC(l.feature)).addTo(map);
- if(hi && hi.j) extraLayers["House Inlet"] = L.geoJSON(hi.j, { pointToLayer: (f, ll) => L.circleMarker(ll, {radius: 5, fillColor: '#e8590c', color: '#fff', weight: 1.5, fillOpacity: 1}) }).bindPopup(l => pHI(l.feature)).addTo(map);
-
- L.control.layers(null, extraLayers, {position: 'topright', collapsed: true}).addTo(map);
-
  start();
-}).catch(e=>{
-    // Menampilkan pesan error elegan jika data utama (v_lateral / v_manhole) gagal dimuat
-    const errDiv = document.createElement('div');
-    errDiv.style.cssText = 'position:absolute; top:20px; left:50%; transform:translateX(-50%); z-index:9999; background:#ffdddd; color:#d9480f; padding:12px 20px; border-radius:6px; border:1px solid #d9480f; box-shadow:0 4px 10px rgba(0,0,0,0.2); font-weight:bold; text-align:center; max-width:80%;';
-    errDiv.innerHTML = 'Data Utama Belum Siap (Menunggu Server GitHub). <br><br> Tunggu 1-2 menit, lalu tekan <b>Ctrl + F5</b>.';
-    $('map').appendChild(errDiv);
-});
+}).catch(e=>{$('map').innerHTML='<p style="padding:16px">Data tidak bisa dimuat: '+esc(e.message)+'. Pastikan folder data berisi v_lateral_pipe.geojson dan v_manhole.geojson, dan buka halaman lewat alamat GitHub Pages, bukan dengan klik dua kali file index.html.</p>'});
 </script>
 </body>
 </html>
