@@ -20,7 +20,9 @@ header{display:flex;flex-wrap:wrap;background:var(--panel);border-bottom:1px sol
 .tb.t b{font:700 22px/1.1 'Barlow Condensed',sans-serif}
 .hb{margin-left:auto;display:flex;gap:6px;align-items:center;padding:4px 12px}
 .btn{border:1px solid var(--line);background:var(--inp);border-radius:4px;padding:5px 10px;cursor:pointer}.btn:hover{border-color:var(--acc)}.btn[aria-pressed=true]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
-main{flex:1;min-height:0;display:grid;grid-template-columns:370px 1fr}body.min main{grid-template-columns:1fr}body.min aside{display:none}
+main{flex:1;min-height:0;display:grid;grid-template-columns:370px 1fr}
+body.min main{grid-template-columns:1fr}
+body.min aside{display:none}
 aside{overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:12px 14px}
 h2{font:600 15px Barlow,sans-serif;margin:16px 0 6px;padding-top:10px;border-top:1px solid var(--line)}
 #q{width:100%;padding:9px 10px;border:1px solid var(--ink);border-radius:4px;background:var(--inp)}
@@ -43,11 +45,13 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td
 .pp{min-width:240px;max-height:55vh;overflow:auto;padding-right:4px}.pp h3{font:700 20px 'Barlow Condensed',sans-serif;margin:0}.pp .sub{margin:0 0 4px;color:var(--mut);font-size:13px}
 .pp h4{font-size:13px;margin:8px 0 2px;border-top:1px solid var(--line);padding-top:4px}.pp table{width:100%;border-collapse:collapse;font-size:13px}.pp th{text-align:left;font-weight:400;color:var(--mut);padding:1px 8px 1px 0}.pp td{text-align:right;font-weight:600}
 
+/* CSS Responsif Mobile */
 @media(max-width:820px){
     body{height:100vh;overflow:hidden}
     main{display:block; position:relative;}
     #map{height:100%; width: 100%;}
     aside{
+        display: block !important;
         position: absolute;
         top: 0; left: 0;
         width: 80%;
@@ -64,7 +68,10 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td
 }
 </style>
 </head>
-<body class="min"> 
+<body>
+<!-- Script agar di HP panel otomatis tertutup sejak awal, tapi di laptop terbuka -->
+<script>if(window.innerWidth <= 820) document.body.classList.add('min');</script>
+
 <header>
 <div class="tb t"><small>Paket CWIS 06</small><b>Monitoring pipa sewerage</b></div>
 <div class="tb"><small>Lokasi</small><b>Banjardowo dan Genuksari</b></div>
@@ -74,14 +81,13 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td
 </header>
 <main>
 <aside>
-<input id="q" type="search" placeholder="Cari MHJ_06_0773, MH_06_..., nama jalan, material" autocomplete="off" aria-label="Cari manhole atau pipa">
+<input id="q" type="search" placeholder="Cari MHJ_06_0773, nama jalan, material" autocomplete="off" aria-label="Cari manhole atau pipa">
 <ul id="res" role="listbox"></ul><p class="sm" id="rc">Tekan / untuk mencari. Pencarian mencakup semua atribut.</p>
 <h2>Tampilan Peta</h2>
 <div class="seg"><button class="btn" data-c="method" aria-pressed="true">Metode</button><button class="btn" data-c="progress" aria-pressed="false">Progres</button></div>
 <h2>Progres pipa</h2>
 <div class="pg"><span class="sm">Berbobot panjang gambar</span><br><b id="kPct">0%</b><div class="bar"><i id="kBar" style="width:0"></i></div>
 <dl class="k">
-  <!-- PERBAIKAN: Penambahan Panjang Pipa Collecting & Persil -->
   <dt>Pipa Lateral</dt><dd id="kLen">–</dd>
   <dt>Pipa Collecting</dt><dd id="cpLen">0,00 km</dd>
   <dt>Pipa Persil</dt><dd id="ppLen">0,00 km</dd>
@@ -120,17 +126,15 @@ const badIE=p=>p.invert_elev!=null&&p.elev_downstream!=null&&p.invert_elev>p.ele
 const REF=new Set(['MHJ_06_02_0150','MH-0282']);
 const isRef=p=>REF.has(p.manhole_id)||p.is_reference===true||p.is_reference==='true';
 let PIPES,MH,IDX=[],hits=[],sel=-1,hl=null,cMode='method';
-
 const mm=new Map(),byId=new Map(),f={zone:'',cls:'',st:''},off=new Set();
-const map=L.map('map',{preferCanvas:true,zoomControl:false});L.control.zoom({position:'topright'}).addTo(map);
 
-L.control.locate({
-    position: 'topleft',
-    strings: { title: "Tampilkan lokasi saya" },
-    locateOptions: { maxZoom: 16 }
-}).addTo(map);
+// 1. Inisialisasi peta langsung dengan koordinat tengah Semarang agar basemap langsung muncul
+const map=L.map('map',{preferCanvas:true,zoomControl:false}).setView([-6.955, 110.479], 14);
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.locate({position: 'topleft', strings: { title: "Tampilkan lokasi saya" }, locateOptions: { maxZoom: 16 }}).addTo(map);
 
-const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+// 2. Tampilkan Peta Jalan Dasar (OSM) sejak awal (sebelum data selesai di-download)
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 const grp=L.featureGroup().addTo(map);
 
 L.DomEvent.disableClickPropagation($('lg'));
@@ -228,10 +232,14 @@ function start(){
  opt('fZone',[...new Set(PIPES.features.concat(MH.features).map(x=>x.properties.zone).filter(z=>z!=null))].sort((a,b)=>a-b).map(z=>[String(z),'Zona '+z]));
  opt('fCls',['Primary','Secondary','Tertiary'].map(c=>[c,c]));
  $('tbLen').textContent=fmt(PIPES.features.reduce((s,x)=>s+(x.properties.length_m||0),0)/1000,2)+' km';
- osm.addTo(map);map.fitBounds(L.geoJSON(PIPES).getBounds().pad(.05));render(false);
+ 
+ // Fitbounds hanya jika data utama berhasil diload
+ if(PIPES.features && PIPES.features.length > 0) {
+     map.fitBounds(L.geoJSON(PIPES).getBounds().pad(.05));
+ }
+ render(false);
 }
 
-// Memuat data GeoJSON dengan fungsi .catch ganda agar kebal terhadap variasi nama file (ic / inspection_chamber)
 Promise.all([
     get('data/v_lateral_pipe.geojson'),
     get('data/v_manhole.geojson'),
@@ -245,44 +253,45 @@ Promise.all([
  PIPES=norm(a.j); MH=norm(b.j);
  const lm=a.lm||b.lm;if(lm)$('upd').textContent=new Date(lm).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
  
- // Format HTML untuk popup layer tambahan
  const pRW = f => `<div class="pp"><h3>${esc(f.properties.rw_label)}</h3><p class="sub">Kelurahan ${esc(f.properties.kelurahan)}</p></div>`;
  const pZn = f => `<div class="pp"><h3>Zona ${esc(f.properties.zone_no)}</h3><p class="sub">${esc(f.properties.zone_name)}</p></div>`;
  const pCP = f => `<div class="pp"><h3>${esc(f.properties.cp_id)}</h3><p class="sub">Collecting Pipe</p><table><tr><th>Panjang</th><td>${fmt(f.properties.length_m, 2)} m</td></tr></table></div>`;
  const pPP = f => `<div class="pp"><h3>${esc(f.properties.pp_id)}</h3><p class="sub">Persil Pipe</p><table><tr><th>Panjang</th><td>${fmt(f.properties.length_m, 2)} m</td></tr></table></div>`;
  const pHI = f => `<div class="pp"><h3>${esc(f.properties.hi_id)}</h3><p class="sub">House Inlet (${esc(f.properties.hi_code)})</p><table><tr><th>Elevasi</th><td>${fmt(f.properties.elevation, 3)} m</td></tr></table></div>`;
- // PERBAIKAN: Merubah Teks Popup untuk IC
  const pIC = f => `<div class="pp"><h3>${esc(f.properties.ic_id)}</h3><p class="sub">IC (Inspection Chamber) - ${esc(f.properties.ic_type)}</p><table><tr><th>Elevasi</th><td>${fmt(f.properties.elevation, 3)} m</td></tr></table></div>`;
 
  const extraLayers = {};
 
- // Memasukkan layer ke dalam peta JIKA datanya ada & Menghitung total panjang CP dan PP
  if(zn && zn.j) extraLayers["Batas Zona"] = L.geoJSON(zn.j, { style: {color: '#8d9ba3', weight: 2, fillOpacity: 0.1} }).bindPopup(l => pZn(l.feature)).addTo(map);
  if(rw && rw.j) extraLayers["Batas RW"] = L.geoJSON(rw.j, { style: {color: '#586b73', weight: 2, dashArray: '4 4', fillOpacity: 0} }).bindPopup(l => pRW(l.feature)).addTo(map);
  
  if(cp && cp.j) {
      let cpTot = 0;
      if(cp.j.features) cpTot = cp.j.features.reduce((s, x) => s + (Number(x.properties.length_m) || 0), 0);
-     $('cpLen').textContent = fmt(cpTot / 1000, 2) + ' km'; // Inject Panjang Collecting
+     $('cpLen').textContent = fmt(cpTot / 1000, 2) + ' km';
      extraLayers["Collecting Pipe"] = L.geoJSON(cp.j, { style: {color: '#f0a020', weight: 4} }).bindPopup(l => pCP(l.feature)).addTo(map);
  }
  
  if(pp && pp.j) {
      let ppTot = 0;
      if(pp.j.features) ppTot = pp.j.features.reduce((s, x) => s + (Number(x.properties.length_m) || 0), 0);
-     $('ppLen').textContent = fmt(ppTot / 1000, 2) + ' km'; // Inject Panjang Persil
+     $('ppLen').textContent = fmt(ppTot / 1000, 2) + ' km';
      extraLayers["Persil Pipe"] = L.geoJSON(pp.j, { style: {color: '#3fb6c6', weight: 2, dashArray: '4 4'} }).bindPopup(l => pPP(l.feature)).addTo(map);
  }
  
- // PERBAIKAN: Merubah Label Layer Control menjadi "IC (Inspection Chamber)"
  if(ic && ic.j) extraLayers["IC (Inspection Chamber)"] = L.geoJSON(ic.j, { pointToLayer: (f, ll) => L.circleMarker(ll, {radius: 5, fillColor: '#2eaa5c', color: '#fff', weight: 1.5, fillOpacity: 1}) }).bindPopup(l => pIC(l.feature)).addTo(map);
  if(hi && hi.j) extraLayers["House Inlet"] = L.geoJSON(hi.j, { pointToLayer: (f, ll) => L.circleMarker(ll, {radius: 5, fillColor: '#e8590c', color: '#fff', weight: 1.5, fillOpacity: 1}) }).bindPopup(l => pHI(l.feature)).addTo(map);
 
- // Menambahkan kotak kontrol layer di pojok kanan atas
  L.control.layers(null, extraLayers, {position: 'topright', collapsed: true}).addTo(map);
 
  start();
-}).catch(e=>{$('map').innerHTML='<p style="padding:16px">Data tidak bisa dimuat: '+esc(e.message)+'.</p>'});
+}).catch(e=>{
+    // Menampilkan pesan error elegan jika data utama (v_lateral / v_manhole) gagal dimuat
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'position:absolute; top:20px; left:50%; transform:translateX(-50%); z-index:9999; background:#ffdddd; color:#d9480f; padding:12px 20px; border-radius:6px; border:1px solid #d9480f; box-shadow:0 4px 10px rgba(0,0,0,0.2); font-weight:bold; text-align:center; max-width:80%;';
+    errDiv.innerHTML = 'Data Utama Belum Siap (Menunggu Server GitHub). <br><br> Tunggu 1-2 menit, lalu tekan <b>Ctrl + F5</b>.';
+    $('map').appendChild(errDiv);
+});
 </script>
 </body>
 </html>
