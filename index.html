@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monitoring Pipa Sewerage – Banjardowo &amp; Genuksari</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+:root{--bg:#f4f6f9;--panel:#fff;--text:#18202c;--muted:#5d6878;--border:#d9dfe7;--accent:#2f7fe0;--track:#e4e9f0;--map:#e9edf2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--panel:#18202b;--text:#e8edf4;--muted:#9aa6b6;--border:#2a3441;--accent:#5b9cf0;--track:#2a3441;--map:#1c2430}}
+:root[data-theme="dark"]{--bg:#0f141b;--panel:#18202b;--text:#e8edf4;--muted:#9aa6b6;--border:#2a3441;--accent:#5b9cf0;--track:#2a3441;--map:#1c2430}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--panel)}
+h1{font-size:17px;margin:0}header p{margin:2px 0 0;color:var(--muted);font-size:12px}
+main{flex:1;min-height:0;display:grid;grid-template-columns:340px 1fr}
+aside{overflow:auto;padding:12px;border-right:1px solid var(--border);background:var(--panel)}
+#map{background:var(--map);min-height:320px}
+h2{font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 6px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.kpi b{display:block;font-size:19px}.kpi span{font-size:11px;color:var(--muted)}
+.big{grid-column:1/-1}.big b{font-size:28px}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{font-size:11px;color:var(--muted);display:block}
+select,button{width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit}
+button{cursor:pointer;margin-top:8px}
+.row{margin:6px 0}.row div:first-child{display:flex;justify-content:space-between;font-size:12px}
+.bar{height:7px;border-radius:4px;background:var(--track);overflow:hidden;margin-top:3px}.bar i{display:block;height:100%;background:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:4px 2px;text-align:right;border-bottom:1px solid var(--border)}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-weight:500}
+.leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
+small{color:var(--muted);font-size:11px}
+.pop td{padding:2px 6px 2px 0;border:0;text-align:left;color:#18202c}.pop b{color:#18202c}
+@media(max-width:800px){body{height:auto;overflow:auto}main{display:block;flex:none}aside{border-right:0}#map{height:62vh}}
+</style>
+</head>
+<body>
+<header><h1>Monitoring Instalasi Pipa Sewerage</h1><p>Banjardowo &amp; Genuksari · Data diperbarui: <span id="upd">-</span></p></header>
+<main>
+<aside>
+<div class="kpis">
+<div class="kpi big"><span>Progres pipa (berbobot panjang)</span><b id="kPct">0%</b><div class="bar"><i id="kBar" style="width:0%"></i></div></div>
+<div class="kpi"><span>Panjang pipa</span><b id="kLen">–</b></div>
+<div class="kpi"><span>Terpasang (setara)</span><b id="kDone">–</b></div>
+<div class="kpi"><span>Ruas pipa</span><b id="kN">–</b></div>
+<div class="kpi"><span>Manhole selesai</span><b id="kMh">–</b></div>
+</div>
+<h2>Filter</h2>
+<div class="filters">
+<div><label for="fZone">Zona</label><select id="fZone"><option value="">Semua</option></select></div>
+<div><label for="fCls">Kelas pipa</label><select id="fCls"><option value="">Semua</option></select></div>
+<div><label for="fMet">Metode</label><select id="fMet"><option value="">Semua</option></select></div>
+<div><label for="fSt">Status</label><select id="fSt"><option value="">Semua</option><option value="belum">Belum mulai</option><option value="berjalan">Berjalan</option><option value="selesai">Selesai</option></select></div>
+</div>
+<button id="bReset">Reset filter dan tampilan</button>
+<label style="margin-top:8px"><input type="checkbox" id="cOsm" checked> Peta dasar OpenStreetMap</label>
+<h2>Progres per zona</h2><div id="zones"></div>
+<h2>Per kelas dan metode</h2>
+<table><thead><tr><th>Kelas / metode</th><th>Ruas</th><th>km</th><th>%</th></tr></thead><tbody id="cls"></tbody></table>
+<h2>Legenda</h2>
+<div class="leg"><span><i style="background:#8b95a5"></i>Belum mulai</span><span><i style="background:#f08c1a"></i>1–49%</span><span><i style="background:#2f7fe0"></i>50–99%</span><span><i style="background:#2eaa5c"></i>Selesai</span></div>
+<small>Garis tebal = Primary, sedang = Secondary, tipis = Tertiary. Titik besar = manhole shaft (AR/DR). Lingkaran putus-putus = manhole paket sebelah (referensi posisi, tidak dihitung).</small>
+</aside>
+<div id="map"></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+let PIPES,MH;
+const $=i=>document.getElementById(i);
+const fmt=(n,d=1)=>n==null?'-':n.toLocaleString('id-ID',{maximumFractionDigits:d,minimumFractionDigits:d});
+const col=p=>p>=100?'#2eaa5c':p>=50?'#2f7fe0':p>0?'#f08c1a':'#8b95a5';
+const st=p=>p>=100?'selesai':p>0?'berjalan':'belum';
+const esc=s=>String(s==null?'-':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const zl=z=>z==null?'Tanpa zona':'Zona '+z;
+const REF=new Set(['MHJ_06_02_0150','MH-0282']);
+const isRef=p=>REF.has(p.manhole_id)||p.is_reference===true||p.is_reference==='true'||p.is_reference===1;
+const bar=p=>'<div class="bar"><i style="width:'+Math.min(100,p)+'%"></i></div>';
+const map=L.map('map',{preferCanvas:true});
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+const grp=L.layerGroup().addTo(map);
+function init(){
+const bounds=L.geoJSON(PIPES).getBounds();
+const f={zone:'',cls:'',met:'',st:''};
+const fill=(id,vals)=>vals.forEach(v=>{const o=document.createElement('option');o.value=v[0];o.textContent=v[1];$(id).appendChild(o)});
+const zs=[...new Set(PIPES.features.concat(MH.features).map(x=>x.properties.zone).filter(z=>z!=null))].sort((a,b)=>a-b);
+fill('fZone',zs.map(z=>[String(z),zl(z)]));
+fill('fCls',['Primary','Secondary','Tertiary'].map(c=>[c,c]));
+fill('fMet',[...new Set(PIPES.features.map(x=>x.properties.method))].map(m=>[m,m]));
+const okZ=p=>!f.zone||String(p.zone)===f.zone, okS=p=>!f.st||st(p.progress_pct)===f.st;
+const okP=p=>okZ(p)&&okS(p)&&(!f.cls||p.pipe_type===f.cls)&&(!f.met||p.method===f.met);
+const okM=p=>okZ(p)&&okS(p)&&(!f.cls||p.mh_type===f.cls)&&!f.met;
+const rows=(o,k)=>Object.entries(o).map(([a,b])=>'<tr><td>'+esc(a)+'</td><td>'+esc(b[k])+'</td></tr>').join('');
+const popP=p=>'<table class="pop"><tr><td colspan="2"><b>'+esc(p.pipe_id)+'</b></td></tr>'+rows({'Kelas':{v:p.pipe_type},'Metode':{v:p.method},'Material':{v:p.material},'Diameter':{v:p.diameter_mm+' mm'},'Panjang':{v:fmt(p.length_m,2)+' m'},'Slope':{v:p.slope_pct==null?'-':fmt(p.slope_pct,2)+' %'},'Lokasi':{v:p.location_name},'Zona':{v:p.zone},'Tahap':{v:p.stage_label},'Progres':{v:p.progress_pct+'%'}},'v')+'</table>';
+const popM=p=>'<table class="pop"><tr><td colspan="2"><b>'+esc(p.manhole_id)+'</b></td></tr>'+rows({'Tipe':{v:p.mh_type},'Diameter':{v:p.diameter_mm+' mm'},'Kedalaman':{v:p.depth_m==null?'-':fmt(p.depth_m,2)+' m'},'Shaft':{v:p.shaft},'Lokasi':{v:p.location_name},'Zona':{v:p.zone},'Tahap':{v:p.stage_label},'Rencana':{v:p.plan_date},'Realisasi':{v:p.actual_date},'Progres':{v:p.progress_pct+'%'}},'v')+'</table>';
+function agg(list,keyf){const g={};list.forEach(x=>{const p=x.properties,k=keyf(p);(g[k]=g[k]||{n:0,l:0,d:0});g[k].n++;g[k].l+=p.length_m;g[k].d+=p.length_m*p.progress_pct/100});return g}
+function render(){
+ grp.clearLayers();
+ const P=PIPES.features.filter(x=>okP(x.properties)),M=MH.features.filter(x=>okM(x.properties));
+ L.geoJSON({type:'FeatureCollection',features:P},{style:x=>({color:col(x.properties.progress_pct),weight:{Primary:5,Secondary:3.5,Tertiary:2.5}[x.properties.pipe_type]||3,opacity:.9}),onEachFeature:(x,l)=>l.bindPopup(()=>popP(x.properties))}).addTo(grp);
+ M.forEach(x=>{const p=x.properties,r=isRef(p);L.circleMarker([x.geometry.coordinates[1],x.geometry.coordinates[0]],r?{radius:5,color:'#8b95a5',weight:2,dashArray:'2 2',fillOpacity:0}:{radius:p.shaft?5:3.5,color:'#fff',weight:1,fillColor:col(p.progress_pct),fillOpacity:1}).bindPopup(r?'<b>'+esc(p.manhole_id)+'</b><br>Paket sebelah (CWIS 02), hanya referensi posisi':popM(p)).addTo(grp)});
+ const tot=P.reduce((s,x)=>s+x.properties.length_m,0),dn=P.reduce((s,x)=>s+x.properties.length_m*x.properties.progress_pct/100,0),pct=tot?100*dn/tot:0;
+ $('kPct').textContent=fmt(pct)+'%';$('kBar').style.width=pct+'%';
+ $('kLen').textContent=fmt(tot/1000,2)+' km';$('kDone').textContent=fmt(dn/1000,2)+' km';$('kN').textContent=P.length;
+ const Mn=M.filter(x=>!isRef(x.properties));$('kMh').textContent=Mn.filter(x=>x.properties.progress_pct>=100).length+' / '+Mn.length;
+ const z=agg(P,p=>zl(p.zone));
+ $('zones').innerHTML=Object.keys(z).sort().map(k=>{const v=z[k],q=v.l?100*v.d/v.l:0;return '<div class="row"><div><span>'+esc(k)+' · '+fmt(v.l/1000,2)+' km</span><b>'+fmt(q)+'%</b></div>'+bar(q)+'</div>'}).join('')||'<small>Tidak ada data.</small>';
+ const c=agg(P,p=>p.pipe_type+' / '+p.method);
+ $('cls').innerHTML=Object.keys(c).sort().map(k=>{const v=c[k];return '<tr><td>'+esc(k)+'</td><td>'+v.n+'</td><td>'+fmt(v.l/1000,2)+'</td><td>'+fmt(v.l?100*v.d/v.l:0)+'</td></tr>'}).join('');
+}
+[['fZone','zone'],['fCls','cls'],['fMet','met'],['fSt','st']].forEach(([id,k])=>$(id).onchange=e=>{f[k]=e.target.value;render()});
+$('bReset').onclick=()=>{Object.keys(f).forEach(k=>f[k]='');['fZone','fCls','fMet','fSt'].forEach(i=>$(i).value='');map.fitBounds(bounds.pad(.05));render()};
+$('cOsm').onchange=e=>e.target.checked?osm.addTo(map):map.removeLayer(osm);
+osm.addTo(map);map.fitBounds(bounds.pad(.05));render();
+}
+const NUM=['length_m','slope_pct','progress_pct','diameter_mm','depth_m'];
+const norm=g=>{g.features=g.features.filter(x=>x.geometry);g.features.forEach(x=>NUM.forEach(k=>{const v=x.properties[k];x.properties[k]=(v===null||v===undefined||v==='')?null:Number(v)}));return g};
+const get=u=>fetch(u,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error(u+' ('+r.status+')');return r.json().then(j=>({j,lm:r.headers.get('Last-Modified')}))});
+Promise.all([get('data/v_lateral_pipe.geojson'),get('data/v_manhole.geojson')]).then(([a,b])=>{
+ PIPES=norm(a.j);MH=norm(b.j);
+ const lm=a.lm||b.lm;if(lm)$('upd').textContent=new Date(lm).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+ init();
+}).catch(e=>{$('map').innerHTML='<p style="padding:16px">Data tidak bisa dimuat: '+esc(e.message)+'. Pastikan folder data berisi v_lateral_pipe.geojson dan v_manhole.geojson, dan buka halaman lewat alamat GitHub Pages, bukan dengan klik dua kali file index.html.</p>'});
+</script>
+</body>
+</html>
