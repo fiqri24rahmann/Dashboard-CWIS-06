@@ -122,11 +122,7 @@ const map=L.map('map',{preferCanvas:true,zoomControl:false});L.control.zoom({pos
 const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
 const grp=L.featureGroup().addTo(map);
 map.createPane('pz').style.zIndex=300;map.createPane('pm').style.zIndex=650;
-<<<<<<< Updated upstream
-const SL={zona:L.featureGroup(),rw:L.featureGroup(),collect:L.featureGroup(),persil:L.featureGroup(),ic:L.featureGroup(),hi:L.featureGroup()},sById=new Map(),vis={pipe:true,mh:true,collect:true,persil:true,ic:true,hi:true,zona:true,rw:false},have={};
-=======
 const SL={zona:L.featureGroup(),rw:L.featureGroup(),collect:L.featureGroup(),persil:L.featureGroup(),ic:L.featureGroup(),hip:L.featureGroup(),hic:L.featureGroup(),sr:L.featureGroup()},sById=new Map(),vis={pipe:true,mh:true,collect:true,persil:true,ic:true,hip:false,hic:true,sr:true,zona:true,rw:false},have={};
->>>>>>> Stashed changes
 L.DomEvent.disableClickPropagation($('lg'));
 const mmeth=id=>{const s=mm.get(id);return !s?null:s.size>1?'Campuran':[...s][0]};
 const colP=p=>cMode==='progress'?prog(p.progress_pct):p.method==='Jacking'?JK:OT;
@@ -175,11 +171,7 @@ function draw(){const sh=hits.slice(0,8),q=$('q').value.trim();
 function search(v){const q=v.trim().toLowerCase();sel=-1;if(!q){hits=[];clearHl();return draw()}
  const t=q.split(/\s+/),r=i=>{const d=i.id.toLowerCase();return d.startsWith(q)?0:d.includes(q)?1:2};
  hits=IDX.filter(i=>t.every(w=>i.h.includes(w))).sort((a,b)=>r(a)-r(b));draw()}
-<<<<<<< Updated upstream
-function go(i){$('q').value=i.id;hits=[];draw();if(mob()){sh(0);$('q').blur()}const isS=sById.has(i.id);if(isS&&!map.hasLayer(SL[i.t])){vis[i.t]=true;lyDraw();SL[i.t].addTo(map)}if(!isS&&!byId.has(i.id)){resetFilters();render(false)}
-=======
 function go(i){$('q').value=i.id;hits=[];draw();if(mob()){sh(0);$('q').blur()}const gk=i.g||i.t,isS=sById.has(i.id);if(isS&&!map.hasLayer(SL[gk])){vis[gk]=true;lyDraw();SL[gk].addTo(map)}if(!isS&&!byId.has(i.id)){resetFilters();render(false)}
->>>>>>> Stashed changes
  const l=byId.get(i.id)||sById.get(i.id);if(!l)return;clearHl();seek=true;setTimeout(()=>{seek=false},2500);
  hl=L.geoJSON(i.f,{style:{color:'#ffd43b',weight:12,opacity:.7},pointToLayer:(x,ll)=>L.circleMarker(ll,{radius:14,color:'#ffd43b',weight:5,fillOpacity:0})}).addTo(map);hl.eachLayer(x=>x.bringToBack());
  if(i.t==='p'||i.t==='collect'||i.t==='persil'){map.fitBounds(l.getBounds().pad(.6),{maxZoom:19});setTimeout(()=>l.openPopup(l.getBounds().getCenter()),350)}
@@ -202,22 +194,6 @@ $('res').addEventListener('mousedown',e=>{const li=e.target.closest('li');if(li)
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$('q').focus()}});
 const KIND={p:'Pipa lateral',m:'Manhole',collect:'Pipa collecting',persil:'Pipa persil',ic:'Inspection chamber',hi:'House inlet'};
 const SP=[{k:'zona',f:'zona',t:'Zona',id:'zone_name'},{k:'rw',f:'batas_rw',t:'Batas RW',id:'rw_label'},{k:'collect',f:'collecting_pipe',t:'Pipa collecting',id:'cp_id'},{k:'persil',f:'persil_pipe',t:'Pipa persil',id:'pp_id'},{k:'ic',f:'inspection_chamber',t:'Inspection chamber',id:'ic_id'},{k:'hi',f:'house_inlet',t:'House inlet',id:'hi_id'}];
-<<<<<<< Updated upstream
-const HIC={HI:'#f59f00',HIP:'#f59f00',SR:'#4dabf7'},SKIP=new Set(['attrs','fid','geom','updated_at','stage_code']);
-const nv=(k,v)=>typeof v==='boolean'?(v?'ya':'tidak'):typeof v!=='number'?esc(v):/lon|lat/.test(k)?v.toFixed(6):fmt(v,Number.isInteger(v)?0:3);
-const popG=(p,t,k)=>'<div class="pp"><h3>'+esc(p[k])+'</h3><p class="sub">'+t+'</p><table>'+Object.entries(p).filter(([a,v])=>!SKIP.has(a)&&a!==k&&v!=null&&v!=='').map(([a,v])=>row(esc(a.replace(/_/g,' ')),nv(a,v))).join('')+'</table></div>';
-function buildStatic(s,g){const G=SL[s.k],poly=s.k==='zona'||s.k==='rw';
- g.features.forEach(x=>{const p=x.properties,id=p[s.id];let l,inner;
-  if(x.geometry.type==='Point'){const c=x.geometry.coordinates;inner=l=L.circleMarker([c[1],c[0]],s.k==='ic'?{radius:5,color:'#fff',weight:1.2,fillColor:'#d6336c',fillOpacity:1}:{radius:3,color:'#fff',weight:.6,fillColor:HIC[p.hi_code]||'#f59f00',fillOpacity:1})}
-  else{l=L.geoJSON(x,poly?{pane:'pz',interactive:false,style:{color:s.k==='zona'?'#7048b8':'#868e96',weight:s.k==='zona'?2.5:1.2,dashArray:s.k==='zona'?'8 5':'3 4',fillOpacity:.05}}:{style:{color:s.k==='collect'?'#c2255c':'#868e96',weight:s.k==='collect'?2.5:1.5,dashArray:s.k==='persil'?'2 4':null}});l.eachLayer(y=>{inner=y})}
-  if(poly)inner.bindTooltip(String(id),{permanent:true,direction:'center',className:'plbl'+(s.k==='rw'?' rwl':'')});
-  else{inner.bindPopup(()=>popG(p,s.t,s.id),{maxWidth:340}).bindTooltip(String(id),{sticky:true});sById.set(id,inner);IDX.push({t:s.k,f:x,id:String(id),h:hay(p)})}
-  G.addLayer(l)});
- have[s.k]=g.features.length}
-const LY=[['pipe','Pipa lateral'],['mh','Manhole'],['collect','Pipa collecting'],['persil','Pipa persil'],['ic','Inspection chamber'],['hi','House inlet'],['zona','Zona'],['rw','Batas RW']];
-function lyDraw(){$('ly').innerHTML=LY.map(([k,n])=>{const has=k==='pipe'||k==='mh'||have[k];return '<label><input type="checkbox" data-l="'+k+'"'+(vis[k]&&has?' checked':'')+(has?'':' disabled')+'><span>'+n+(has?'':' <small>(belum ada data)</small>')+(have[k]?' <small>'+fmt(have[k],0)+(k==='hi'?', terlihat dari zoom 16':'')+'</small>':'')+'</span></label>'}).join('')}
-function syncStatic(){Object.keys(SL).forEach(k=>{const on=vis[k]&&have[k]&&(k!=='hi'||map.getZoom()>=16);on?SL[k].addTo(map):map.removeLayer(SL[k])});document.body.classList.toggle('zrw',map.getZoom()>=15)}
-=======
 const HI_MINZ=0;   // zoom minimum untuk menampilkan house inlet (0 = selalu tampil; naikkan, mis. 14, bila terlalu padat)
 const HIK={HIP:'hip',HI:'hic',SR:'sr'},HIL={hip:'Potensi, belum disurvey',hic:'HI, disetujui tanpa pipa dalam rumah',sr:'SR, disetujui dengan pipa dalam rumah'},HIC={hip:'#868e96',hic:'#f59f00',sr:'#2b8a3e'},hcat=p=>HIK[String(p.hi_code||'').trim().toUpperCase()]||'hip';
 const SKIP=new Set(['attrs','fid','geom','updated_at','stage_code','hi_status','hi_kategori','has_inside_pipe','in_scope']);
@@ -239,7 +215,6 @@ function hiTable(){const z={};let n={sr:0,hic:0,hip:0};
  $('hit').innerHTML=Object.keys(z).sort((a,b)=>a-b).map(k=>'<tr><td>'+(k==='-'?'Di luar zona':'Zona '+k)+'</td><td>'+fmt(z[k].sr,0)+'</td><td>'+fmt(z[k].hic,0)+'</td><td>'+fmt(z[k].hip,0)+'</td></tr>').join('')+'<tr><td><b>Total</b></td><td><b>'+fmt(n.sr,0)+'</b></td><td><b>'+fmt(n.hic,0)+'</b></td><td><b>'+fmt(n.hip,0)+'</b></td></tr>';
  $('kHi').textContent=fmt(n.sr+n.hic,0)+' (potensi '+fmt(n.hip,0)+')'}
 function syncStatic(){Object.keys(SL).forEach(k=>{const on=vis[k]&&have[k]&&(!['hip','hic','sr'].includes(k)||map.getZoom()>=HI_MINZ);on?SL[k].addTo(map):map.removeLayer(SL[k])});document.body.classList.toggle('zrw',map.getZoom()>=15)}
->>>>>>> Stashed changes
 map.on('zoomend',syncStatic);
 $('ly').onchange=e=>{const k=e.target.dataset.l;vis[k]=e.target.checked;syncStatic();if(k==='pipe'||k==='mh')render(false)};
 let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>{t.style.display='none'},3500)};
@@ -272,11 +247,7 @@ function start(){
  opt('fCls',['Primary','Secondary','Tertiary'].map(c=>[c,c]));
  $('tbLen').textContent=fmt(PIPES.features.reduce((s,x)=>s+(x.properties.length_m||0),0)/1000,2)+' km';
  osm.addTo(map);map.fitBounds(L.geoJSON(PIPES).getBounds().pad(.05));render(false);lyDraw();
-<<<<<<< Updated upstream
- Promise.allSettled(SP.map(s=>get('data/'+s.f+'.geojson').then(r=>{r.j.features=r.j.features.filter(x=>x.geometry);buildStatic(s,r.j)}))).then(()=>{lyDraw();syncStatic()});
-=======
  Promise.allSettled(SP.map(s=>get('data/'+s.f+'.geojson').then(r=>{r.j.features=r.j.features.filter(x=>x.geometry);buildStatic(s,r.j)}))).then(()=>{lyDraw();syncStatic();legend();hiTable()});
->>>>>>> Stashed changes
 }
 Promise.all([get('data/v_lateral_pipe.geojson'),get('data/v_manhole.geojson')]).then(([a,b])=>{
  PIPES=norm(a.j);MH=norm(b.j);
