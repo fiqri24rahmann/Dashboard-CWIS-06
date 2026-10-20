@@ -9,10 +9,18 @@ set DB_NAME=db_cwis06
 set DB_USER=postgres
 set SRC_SRID=32749
 rem ==============================================
-rem Letakkan file ini di folder repo hasil git clone (satu folder dengan index.html).
+rem Skrip menyalin dirinya ke folder TEMP lalu berjalan dari sana, supaya aman
+rem ketika git mengubah file di folder repo (termasuk file ini sendiri).
+rem Letakkan file ini di folder repo (satu folder dengan index.html).
 rem Sebelum menjalankan: di QGIS klik Save Edits agar perubahan masuk ke database.
 
-cd /d "%~dp0"
+if /i not "%~dp0"=="%TEMP%\" (
+  copy /y "%~f0" "%TEMP%\update_dashboard_run.bat" >nul
+  call "%TEMP%\update_dashboard_run.bat" "%~dp0"
+  exit /b
+)
+set "REPO=%~1"
+cd /d "%REPO%"
 
 if not exist ".git" (
   echo Folder ini bukan repo Git. Jalankan git clone dulu, lalu salin file ini ke folder hasil clone.
@@ -23,6 +31,7 @@ if errorlevel 1 (
   echo Git belum terpasang. Pasang Git for Windows dari git-scm.com.
   goto :gagal
 )
+git config core.autocrlf false
 
 set "QGIS_DIR="
 for /d %%D in ("C:\Program Files\QGIS*") do set "QGIS_DIR=%%~fD"
@@ -30,22 +39,23 @@ if not defined QGIS_DIR (
   echo Folder QGIS tidak ditemukan di C:\Program Files. Ubah baris QGIS_DIR di file ini.
   goto :gagal
 )
-
-rem PERBAIKAN: Menyimpan PATH Windows asli agar perintah 'git' tidak hilang setelah QGIS dipanggil
-set "ORIG_PATH=%PATH%"
 call "%QGIS_DIR%\bin\o4w_env.bat" >nul 2>&1
-set "PATH=%ORIG_PATH%;%PATH%"
-
 where ogr2ogr >nul 2>&1
 if errorlevel 1 (
   echo ogr2ogr tidak ditemukan di instalasi QGIS: %QGIS_DIR%
   goto :gagal
 )
 
-rem Password: dibaca dari pgpass.conf bila ada, kalau tidak ada ditanyakan (tidak disimpan).
+rem Password: dibaca dari pgpass.conf bila ada. Kalau tidak ada, ditanyakan dengan input tersembunyi dan tidak disimpan.
 if not exist "%APPDATA%\postgresql\pgpass.conf" (
-  if not defined PGPASSWORD set /p PGPASSWORD=Password PostgreSQL untuk user %DB_USER%: 
+  if not defined PGPASSWORD (
+    for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "$s=Read-Host 'Password PostgreSQL untuk user %DB_USER%' -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))"`) do set "PGPASSWORD=%%P"
+  )
 )
+
+echo Sinkron dengan GitHub ...
+git pull --rebase --autostash
+if errorlevel 1 goto :gagal
 
 if not exist data mkdir data
 rem Format: call :ekspor NAMA_TABEL NAMA_FILE WAJIB(1/0). Layer opsional dilewati bila tabelnya belum ada.
@@ -60,21 +70,25 @@ call :ekspor persil_pipe persil_pipe 0
 call :ekspor zone_area zona 0
 call :ekspor rw_boundary batas_rw 0
 
-git add data/*.geojson
+git add data/*.geojson index.html README.md
 git diff --cached --quiet
-if not errorlevel 1 (
-  echo Tidak ada perubahan data. Dashboard sudah terbaru.
-  goto :selesai
+if errorlevel 1 (
+  git commit -m "Update data %date% %time%"
+  if errorlevel 1 goto :gagal
+) else (
+  echo Tidak ada perubahan data baru.
 )
-git commit -m "Update data %date% %time%"
-if errorlevel 1 goto :gagal
-git pull --rebase
-if errorlevel 1 goto :gagal
 git push
-if errorlevel 1 goto :gagal
+if errorlevel 1 (
+  echo Push ditolak, mencoba sinkron ulang ...
+  git pull --rebase --autostash
+  if errorlevel 1 goto :gagal
+  git push
+  if errorlevel 1 goto :gagal
+)
 
 echo.
-echo Berhasil. Dashboard akan terbarui dalam 1-2 menit. Muat ulang halaman dengan Ctrl+F5.
+echo Selesai. Dashboard akan terbarui dalam 1-2 menit. Muat ulang halaman dengan Ctrl+F5.
 goto :selesai
 
 :ekspor
