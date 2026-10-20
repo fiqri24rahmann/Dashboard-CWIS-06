@@ -23,3 +23,9 @@ buka folder `data` > Add file > Upload files > Commit. Tunggu 1-2 menit, muat ul
 - Zoom tidak dibatasi (maks 28). Tile OSM/Esri diperbesar otomatis di atas zoom 19.
 - Urutan tumpuk dari bawah: Poligon (zona, RW), Polyline (persil, collecting), Line (pipa lateral), Point (house inlet, inspection chamber, manhole). Manhole selalu paling atas dan area kliknya diperlebar.
 - Peta dasar (panel "Peta dasar"): OpenStreetMap, CARTO terang, citra satelit Esri, atau tanpa peta dasar.
+
+## Struktur file
+- `index.html` kerangka halaman
+- `css/style.css` seluruh tampilan (warna, huruf, tata letak, mode gelap)
+- `js/app.js` logika peta, filter, dan popup
+- `data/*.geojson` hasil ekspor database
