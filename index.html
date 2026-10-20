@@ -147,7 +147,7 @@ const colP=p=>cMode==='progress'?prog(p.progress_pct):p.method==='Jacking'?JK:OT
 const colM=p=>{if(cMode==='progress')return prog(p.progress_pct);const m=mmeth(p.manhole_id);return m==='Jacking'?JK:m==='Open Trench'?OT:m==='Campuran'?MX:G0};
 const row=(a,b)=>b==null||b===''?'':'<tr><th>'+a+'</th><td>'+b+'</td></tr>';
 const m3=v=>v==null?null:fmt(v,3)+' m';
-const progRows=p=>'<h4>Progres</h4><table>'+row('Tahap',esc(p.stage_label))+row('Progres',fmt(pc(p),0)+'%')+row('Rencana',p.plan_date)+row('Realisasi',p.actual_date)+'</table>';
+const progRows=p=>'<h4>Progres</h4><table>'+('work_stage' in p?row('Pekerjaan',esc(p.work_stage||'–')):row('Tahap',esc(p.stage_label)))+row('Progres',fmt(pc(p),0)+'%')+row('Rencana',p.plan_date)+row('Mulai kerja',p.actual_date)+'</table>';
 function popP(p){return '<div class="pp"><h3>'+esc(p.pipe_id)+'</h3><p class="sub">'+esc(p.pipe_type)+', '+esc(p.method)+', '+esc(p.material)+', Ø'+fmt(p.diameter_mm,0)+' mm</p><table>'+
  row('Dari manhole',esc(p.from_mh))+row('Ke manhole',esc(p.to_mh))+row('Panjang',p.length_m==null?null:fmt(p.length_m,2)+' m')+row('Slope',p.slope_pct==null?null:fmt(p.slope_pct,2)+' %')+row('Lokasi',esc(p.location_name))+row('Zona',p.zone)+
  '</table><h4>Ujung hulu</h4><table>'+row('Muka tanah (GL)',m3(p.up_gl))+row('Invert',m3(p.up_ie))+row('Kedalaman (GL − invert)',m3(dep(p.up_gl,p.up_ie)))+
