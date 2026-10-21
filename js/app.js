@@ -27,7 +27,10 @@ const HM=L.CircleMarker.extend({_clickTolerance(){return this.options.hit||0}});
 const cm=(ll,o)=>new HM(ll,o);
 const HIS=new Set(['sr','hic','hip']);
 function restack(){[SL.persil,SL.collect,gP,SL.hip,SL.hic,SL.sr,SL.ic,gM].forEach(g=>{if(map.hasLayer(g))g.bringToFront()})}
-const SL={zona:L.featureGroup(),rw:L.featureGroup(),collect:L.featureGroup(),persil:L.featureGroup(),ic:L.featureGroup(),hip:L.featureGroup(),hic:L.featureGroup(),sr:L.featureGroup()},sById=new Map(),vis={pipe:true,mh:true,collect:false,persil:false,ic:false,hip:true,hic:true,sr:true,zona:true,rw:false},have={};
+
+// Set status awal visibilitas untuk HIP, HIC, dan SR menjadi false agar tidak terceklis
+const SL={zona:L.featureGroup(),rw:L.featureGroup(),collect:L.featureGroup(),persil:L.featureGroup(),ic:L.featureGroup(),hip:L.featureGroup(),hic:L.featureGroup(),sr:L.featureGroup()},sById=new Map(),vis={pipe:true,mh:true,collect:false,persil:false,ic:false,hip:false,hic:false,sr:false,zona:true,rw:false},have={};
+
 L.DomEvent.disableClickPropagation($('lg'));
 const mmeth=id=>{const s=mm.get(id);return !s?null:s.size>1?'Campuran':[...s][0]};
 const colP=p=>cMode==='progress'?prog(p.progress_pct):p.method==='Jacking'?JK:OT;
@@ -116,11 +119,18 @@ function buildStatic(s,g){const poly=s.k==='zona'||s.k==='rw';
   G.addLayer(l);have[gk]=(have[gk]||0)+1})}
 const LY=[['pipe','Pipa lateral'],['mh','Manhole'],['collect','Pipa collecting'],['persil','Pipa persil'],['ic','Inspection chamber'],['sr','SR: HI dan pipa dalam rumah'],['hic','HI: tanpa pipa dalam rumah'],['hip','HIP: potensi, belum disurvey'],['zona','Zona'],['rw','Batas RW']];
 function lyDraw(){$('ly').innerHTML=LY.map(([k,n])=>{const has=k==='pipe'||k==='mh'||have[k];return '<label'+(HIS.has(k)?' class="hi"':'')+'><input type="checkbox" data-l="'+k+'"'+(vis[k]&&has?' checked':'')+(has?'':' disabled')+'><span>'+n+(has?'':' <small>(belum ada data)</small>')+(have[k]?' <small>'+fmt(have[k],0)+'</small>':'')+(HIS.has(k)&&HI_MINZ>0?' <small>· tampil di zoom ≥ '+HI_MINZ+'</small>':'')+'</span></label>'}).join('')+(HI_MINZ>0?'<p class="sm" style="grid-column:1/-1">House inlet muncul otomatis saat peta diperbesar sampai zoom '+HI_MINZ+'.</p>':'')}
+
+// Menggabungkan penjumlahan SR, HIC, dan HIP per zona menjadi satu kolom
 function hiTable(){const z={};let n={sr:0,hic:0,hip:0};
  ['sr','hic','hip'].forEach(k=>SL[k].eachLayer(l=>{const q=l._zn==null?'-':l._zn;(z[q]=z[q]||{sr:0,hic:0,hip:0})[k]++;n[k]++}));
  if(!(n.sr+n.hic+n.hip))return;
- $('hit').innerHTML=Object.keys(z).sort((a,b)=>a-b).map(k=>'<tr><td>'+(k==='-'?'Di luar zona':'Zona '+k)+'</td><td>'+fmt(z[k].sr,0)+'</td><td>'+fmt(z[k].hic,0)+'</td><td>'+fmt(z[k].hip,0)+'</td></tr>').join('')+'<tr><td><b>Total</b></td><td><b>'+fmt(n.sr,0)+'</b></td><td><b>'+fmt(n.hic,0)+'</b></td><td><b>'+fmt(n.hip,0)+'</b></td></tr>';
- $('kHi').textContent=fmt(n.sr+n.hic,0)+' (potensi '+fmt(n.hip,0)+')'}
+ $('hit').innerHTML=Object.keys(z).sort((a,b)=>a-b).map(k=>{
+     const totalZ = z[k].sr + z[k].hic + z[k].hip;
+     return '<tr><td>'+(k==='-'?'Di luar zona':'Zona '+k)+'</td><td>'+fmt(totalZ,0)+'</td></tr>';
+ }).join('')+'<tr><td><b>Total</b></td><td><b>'+fmt(n.sr+n.hic+n.hip,0)+'</b></td></tr>';
+ $('kHi').textContent=fmt(n.sr+n.hic+n.hip,0);
+}
+
 function syncStatic(){let ch=false;Object.keys(SL).forEach(k=>{const on=vis[k]&&have[k]&&(!HIS.has(k)||map.getZoom()>=HI_MINZ);if(on&&!map.hasLayer(SL[k])){SL[k].addTo(map);ch=true}else if(!on&&map.hasLayer(SL[k])){map.removeLayer(SL[k]);ch=true}});document.body.classList.toggle('zrw',map.getZoom()>=15);document.body.classList.toggle('hifar',map.getZoom()<HI_MINZ);if(ch)restack()}
 map.on('zoomend',syncStatic);
 $('ly').onchange=e=>{const k=e.target.dataset.l;vis[k]=e.target.checked;syncStatic();if(k==='pipe'||k==='mh')render(false)};
