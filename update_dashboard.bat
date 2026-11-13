@@ -33,6 +33,37 @@ if errorlevel 1 (
 )
 git config core.autocrlf false
 
+rem o4w_env.bat milik QGIS mengganti PATH (git dan powershell jadi tidak ditemukan), jadi PATH asli disimpan dulu.
+set "ORIGPATH=%PATH%"
+
+rem Password: dibaca dari pgpass.conf bila ada. Kalau tidak ada, ditanyakan dengan input tersembunyi dan tidak disimpan.
+if not exist "%APPDATA%\postgresql\pgpass.conf" (
+  if not defined PGPASSWORD (
+    for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "$s=Read-Host 'Password PostgreSQL untuk user %DB_USER%' -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))"`) do set "PGPASSWORD=%%P"
+  )
+)
+
+echo Sinkron dengan GitHub ...
+git pull --rebase --autostash
+if errorlevel 1 goto :gagal
+git ls-files -u | findstr . >nul
+if not errorlevel 1 (
+  echo Ada file yang konflik setelah sinkron. Proses dihentikan agar tidak mengunggah file rusak.
+  git status --short
+  goto :gagal
+)
+
+rem Hitung ulang kolom otomatis (zona, RW, koordinat, panjang, node) di database sebelum ekspor.
+set "PSQL="
+for /d %%D in ("C:\Program Files\PostgreSQL\*") do if exist "%%~fD\bin\psql.exe" set "PSQL=%%~fD\bin\psql.exe"
+if defined PSQL (
+  echo Menghitung ulang kolom otomatis ...
+  "%PSQL%" -w -q -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% -v ON_ERROR_STOP=1 -c "CALL sewer.refresh_all();"
+  if errorlevel 1 echo Peringatan: penghitungan ulang dilewati. Pasang otomasi dulu dengan setup_otomasi.bat.
+) else (
+  echo psql tidak ditemukan, penghitungan ulang kolom otomatis dilewati.
+)
+
 set "QGIS_DIR="
 for /d %%D in ("C:\Program Files\QGIS*") do set "QGIS_DIR=%%~fD"
 if not defined QGIS_DIR (
@@ -45,17 +76,6 @@ if errorlevel 1 (
   echo ogr2ogr tidak ditemukan di instalasi QGIS: %QGIS_DIR%
   goto :gagal
 )
-
-rem Password: dibaca dari pgpass.conf bila ada. Kalau tidak ada, ditanyakan dengan input tersembunyi dan tidak disimpan.
-if not exist "%APPDATA%\postgresql\pgpass.conf" (
-  if not defined PGPASSWORD (
-    for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "$s=Read-Host 'Password PostgreSQL untuk user %DB_USER%' -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))"`) do set "PGPASSWORD=%%P"
-  )
-)
-
-echo Sinkron dengan GitHub ...
-git pull --rebase --autostash
-if errorlevel 1 goto :gagal
 
 if not exist data mkdir data
 rem Format: call :ekspor NAMA_TABEL NAMA_FILE WAJIB(1/0). Layer opsional dilewati bila tabelnya belum ada.
@@ -70,6 +90,13 @@ call :ekspor persil_pipe persil_pipe 0
 call :ekspor zone_area zona 0
 call :ekspor rw_boundary batas_rw 0
 
+set "PATH=%ORIGPATH%"
+
+findstr /m /c:"<<<<<<<" index.html README.md >nul 2>&1
+if not errorlevel 1 (
+  echo index.html atau README.md masih mengandung tanda konflik git. Proses dihentikan.
+  goto :gagal
+)
 git add data/*.geojson index.html README.md
 git diff --cached --quiet
 if errorlevel 1 (
