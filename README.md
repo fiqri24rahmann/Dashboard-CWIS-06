@@ -203,32 +203,6 @@ git push
 
 Agar otomatis, ganti baris `git add data/*.geojson index.html README.md` di `update_dashboard.bat` dengan `git add -A`.
 
-## B6. Pemecahan masalah
-
-| Gejala | Penyebab dan solusi |
-|---|---|
-| Dashboard tidak berubah setelah update | Pastikan sudah **Save Edits** di QGIS, lalu cek pesan "Tidak ada perubahan data baru". Muat ulang dengan Ctrl+F5 dan tunggu 1-2 menit. |
-| Peta kosong, panel menunjukkan "-" dan 0% | Ada error JavaScript atau file data tidak termuat. Buka F12 > Console dan lihat pesan merahnya. Pastikan `data/v_lateral_pipe.geojson` dan `data/v_manhole.geojson` ada. |
-| Layer baru tidak muncul | Layer opsional hanya muncul bila file GeoJSON-nya ada di `data/`. Cek pesan "Dilewati" saat skrip berjalan. |
-| `Folder ini bukan repo Git` | `update_dashboard.bat` harus berada di folder hasil `git clone`, satu folder dengan `index.html`. |
-| `ogr2ogr tidak ditemukan` atau `Folder QGIS tidak ditemukan` | QGIS harus terpasang di `C:\Program Files\QGIS ...`. Jika di lokasi lain, ubah baris pencarian QGIS di skrip. |
-| `psql tidak ditemukan` | Penghitungan ulang kolom otomatis dilewati. Pasang PostgreSQL client tools, atau abaikan jika otomasi tidak dipakai. |
-| `Push ditolak` atau `fetch first` | Ada commit baru dari orang lain. Jalankan `git pull --rebase --autostash`, lalu `git push`. |
-| `file exceeds GitHub's file size limit of 100 MB` | Ada file besar (biasanya TIFF) ikut ter-commit. Pastikan `.gitignore` berisi `*.tif` dan `*.tiff`, lalu batalkan commit dengan `git reset --soft HEAD~1`. |
-| `Authentication failed` atau `403` | Login GitHub kedaluwarsa atau tidak punya hak tulis. Login ulang, atau gunakan Personal Access Token. |
-| Ortofoto tidak muncul (404 di tab Network) | Format dan jalur tile harus `tiles/ortho/{z}/{x}/{y}.jpg`. Cek ekstensi (`.jpg`, bukan `.png`) dan zoom 12-20 di folder `tiles/ortho`. |
-| Save Edits di QGIS ditolak: "Tahap ... tidak sah" | `stage_code` tidak ada di tabel `ref_stage`. Pilih dari dropdown atau gunakan salah satu kode di tabel B3. |
-
-## B7. Pengaturan yang bisa disesuaikan
-
-| Pengaturan | Lokasi |
-|---|---|
-| Zoom mulai tampil house inlet | `HI_MINZ` di awal `js/app.js` (default 18) |
-| Daftar manhole paket sebelah | Daftar `REF` di `js/app.js`, atau kolom `is_reference` di database |
-| Koneksi database dan SRID | Blok pengaturan di awal `update_dashboard.bat` |
-| Warna, huruf, tata letak | `css/style.css` |
-| Jalur dan zoom tile ortofoto | Baris `ortho` di `js/app.js` |
-
 ## Struktur folder
 
 ```
