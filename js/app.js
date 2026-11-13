@@ -144,6 +144,48 @@ const mob=()=>matchMedia('(max-width:820px)').matches,sh=n=>{document.body.class
 $('grab').onclick=()=>sh(((+document.body.dataset.sh||0)+1)%3);
 $('q').addEventListener('focus',()=>{if(mob()&&!+document.body.dataset.sh)sh(1)});
 map.on('click',()=>{if(mob()&&+document.body.dataset.sh)sh(0)});
+/* ===== ALAT UKUR: jarak dan luas =====
+   Hitungan memakai proyeksi UTM 49S (EPSG:32749), sama dengan sistem koordinat database,
+   jadi hasilnya selaras dengan kolom panjang dan luas dari QGIS. */
+const UTM=(()=>{const a=6378137,f=1/298.257223563,n=f/(2-f),A=a/(1+n)*(1+n*n/4+n**4/64),al=[n/2-2*n*n/3+5*n**3/16,13*n*n/48-3*n**3/5,61*n**3/240],k0=.9996,l0=111*Math.PI/180,c=2*Math.sqrt(n)/(1+n);
+ return ll=>{const p=ll.lat*Math.PI/180,dl=ll.lng*Math.PI/180-l0,sp=Math.sin(p),t=Math.sinh(Math.atanh(sp)-c*Math.atanh(c*sp)),xi=Math.atan2(t,Math.cos(dl)),et=Math.atanh(Math.sin(dl)/Math.sqrt(1+t*t));let E=et,N=xi;al.forEach((v,i)=>{const j=2*(i+1);E+=v*Math.cos(j*xi)*Math.sinh(j*et);N+=v*Math.sin(j*xi)*Math.cosh(j*et)});return[500000+k0*A*E,10000000+k0*A*N]}})();
+const msrCalc=a=>{const u=a.map(UTM),d=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1]);let len=0,ar=0;for(let i=1;i<u.length;i++)len+=d(u[i-1],u[i]);
+ if(u.length>2){let s=0;for(let i=0;i<u.length;i++){const q=u[(i+1)%u.length];s+=u[i][0]*q[1]-q[0]*u[i][1]}ar=Math.abs(s)/2}
+ return{len,ar,per:u.length>2?len+d(u[0],u[u.length-1]):0}};
+const fLen=m=>m>=1000?fmt(m/1000,3)+' km':fmt(m,1)+' m',fAr=m=>fmt(m,1)+' m²';
+const MC='#c2255c',mc=map.getContainer(),mg=L.featureGroup().addTo(map),rb=L.polyline([],{pane:'pm',interactive:false,color:MC,weight:2,dashArray:'5 5'}).addTo(map);
+let mPts=[],mMode='d',mOn=false,mDn=null;
+const mp=L.DomUtil.create('div','',$('map'));mp.id='msrp';mp.hidden=true;
+mp.innerHTML='<div class="seg"><button class="btn" data-m="d" aria-pressed="true">Jarak</button><button class="btn" data-m="a" aria-pressed="false">Luas</button></div><p id="msrT"></p><div class="mb"><button class="btn" id="msrU">Urungkan</button><button class="btn" id="msrC">Hapus</button><button class="btn" id="msrX">Tutup</button></div>';
+L.DomEvent.disableClickPropagation(mp);L.DomEvent.disableScrollPropagation(mp);
+const mTag=(ll,t)=>L.tooltip({permanent:true,direction:'top',offset:[0,-8],className:'mlbl'}).setLatLng(ll).setContent(t);
+function msrText(cur){const a=cur?mPts.concat([cur]):mPts,T=$('msrT');
+ if(mMode==='d'){if(!a.length){T.innerHTML='Klik peta untuk menambah titik. Klik titik demi titik mengikuti jalur yang diukur.';return}
+  const r=msrCalc(a),last=a.length>1?msrCalc(a.slice(-2)).len:0;T.innerHTML='Total jarak<br><b>'+fLen(r.len)+'</b>'+(a.length>2?'<br><span class="sm">Segmen terakhir '+fLen(last)+'</span>':'')}
+ else{if(a.length<3){T.innerHTML='Klik minimal 3 titik untuk membentuk area. Titik terkumpul: '+a.length;return}
+  const r=msrCalc(a);T.innerHTML='Luas<br><b>'+fAr(r.ar)+'</b><br><span class="sm">'+fmt(r.ar/10000,4)+' ha, keliling '+fLen(r.per)+'</span>'}}
+function msrRedraw(){mg.clearLayers();rb.setLatLngs([]);const st={pane:'pm',interactive:false,color:MC,weight:3};
+ if(mMode==='a'&&mPts.length>2){const pg=L.polygon(mPts,{...st,fillColor:MC,fillOpacity:.18}).addTo(mg);mTag(pg.getBounds().getCenter(),fAr(msrCalc(mPts).ar)).addTo(mg)}
+ else if(mPts.length>1)L.polyline(mPts,st).addTo(mg);
+ mPts.forEach((p,i)=>{L.circleMarker(p,{pane:'pm',interactive:false,radius:5,color:'#fff',weight:2,fillColor:MC,fillOpacity:1}).addTo(mg);
+  if(mMode==='d'&&i>0)mTag(p,fLen(msrCalc(mPts.slice(0,i+1)).len)).addTo(mg)});
+ msrText()}
+function msrSet(v){mOn=v;mp.hidden=!v;$('msr').setAttribute('aria-pressed',String(v));mc.classList.toggle('msr-on',v);
+ if(v){map.closePopup();clearHl();if(mob())sh(0);msrRedraw()}else{mPts=[];msrRedraw()}}
+const MSR=L.Control.extend({options:{position:'topright'},onAdd(){const b=L.DomUtil.create('button','gps');b.id='msr';b.title='Ukur jarak dan luas';b.setAttribute('aria-label','Ukur jarak dan luas');b.setAttribute('aria-pressed','false');
+ b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg>';
+ L.DomEvent.disableClickPropagation(b);b.onclick=()=>msrSet(!mOn);return b}});
+map.addControl(new MSR());
+mp.querySelector('.seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;mMode=b.dataset.m;mp.querySelectorAll('.seg .btn').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));msrRedraw()};
+$('msrU').onclick=()=>{mPts.pop();msrRedraw()};$('msrC').onclick=()=>{mPts=[];msrRedraw()};$('msrX').onclick=()=>msrSet(false);
+/* Klik ditangkap di fase capture supaya pipa, manhole, dan popup di bawah kursor tidak ikut bereaksi saat mengukur. */
+mc.addEventListener('pointerdown',e=>{mDn=[e.clientX,e.clientY]},true);
+mc.addEventListener('click',e=>{if(!mOn||e.target.closest('#msrp,.leaflet-control,#lg'))return;e.stopPropagation();e.preventDefault();
+ if(mDn&&Math.hypot(e.clientX-mDn[0],e.clientY-mDn[1])>6)return;mPts.push(map.mouseEventToLatLng(e));msrRedraw()},true);
+mc.addEventListener('dblclick',e=>{if(mOn&&!e.target.closest('#msrp,.leaflet-control,#lg'))e.stopPropagation()},true);
+map.on('mousemove',e=>{if(!mOn||!mPts.length)return;rb.setLatLngs(mMode==='a'&&mPts.length>1?[mPts[mPts.length-1],e.latlng,mPts[0]]:[mPts[mPts.length-1],e.latlng]);msrText(e.latlng)});
+document.addEventListener('keydown',e=>{if(mOn&&e.key==='Escape')msrSet(false)});
+
 $('lgT').onclick=()=>document.body.classList.toggle('lgon');
 legend();
 const NUM=['length_m','slope_pct','progress_pct','diameter_mm','depth_m','ground_elev','invert_elev','elev_downstream','elev_upstream_1','elev_upstream_2','elev_upstream_3','up_gl','up_ie','up_depth','lw_gl','lw_ie','lw_depth','drop_m'];

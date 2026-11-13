@@ -72,6 +72,13 @@ table.t th:first-child,table.t td:first-child{text-align:left}table.t th{color:v
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2000;background:var(--ink);color:var(--panel);padding:9px 15px;border-radius:var(--r);max-width:90vw;display:none;text-align:center}
 .plbl{background:none;border:0;box-shadow:none;color:var(--ink);font:700 14px 'Bricolage Grotesque',sans-serif;text-shadow:0 0 3px var(--panel),0 0 3px var(--panel),0 0 3px var(--panel)}.plbl:before{display:none}
 .rwl{display:none}body.zrw .rwl{display:block}
+/* Alat ukur jarak dan luas */
+#msrp{position:absolute;left:14px;top:14px;z-index:800;width:262px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#msrp[hidden]{display:none}#msrp .seg{margin-bottom:8px}
+#msrT{margin:0;line-height:1.5;font-size:14px}#msrT b{font:600 22px/1.2 'Bricolage Grotesque',sans-serif;letter-spacing:-.01em}
+#msrp .mb{display:flex;gap:6px;margin-top:9px}#msrp .mb .btn{flex:1;padding:5px 6px}
+.msr-on,.msr-on .leaflet-interactive,.msr-on.leaflet-grab,.msr-on.leaflet-dragging{cursor:crosshair!important}
+.leaflet-tooltip.mlbl{background:var(--panel);color:var(--ink);border:1px solid var(--line);font-weight:600;padding:2px 6px;box-shadow:none}.mlbl:before{display:none}
 @media(prefers-reduced-motion:reduce){*,::details-content{transition:none!important}}
 @media(max-width:820px){
  body{height:100%;overflow:hidden}
@@ -88,4 +95,5 @@ table.t th:first-child,table.t td:first-child{text-align:left}table.t th{color:v
  .btn,select,#q{min-height:42px}.ly input{width:20px;height:20px}
  .pp{min-width:0;max-height:36vh}
  #toast{bottom:120px}
+ #msrp{left:10px;top:10px;width:calc(100% - 70px);max-width:300px}
 }
