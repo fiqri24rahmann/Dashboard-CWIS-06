@@ -7,7 +7,14 @@ const st=p=>p>=100?'selesai':p>0?'berjalan':'belum';
 const pc=p=>p.progress_pct||0;
 const dep=(g,i)=>g==null||i==null?null:g-i;   // kedalaman = GL - invert (berlaku untuk invert negatif maupun positif)
 const lowIE=p=>{const a=[p.elev_downstream,p.elev_upstream_1,p.elev_upstream_2,p.elev_upstream_3].filter(v=>v!=null);return a.length?Math.min(...a):null};
-
+const ortho = L.tileLayer('tiles/ortho/{z}/{x}/{y}.png', {
+  minZoom: 14,
+  maxNativeZoom: 19,
+  maxZoom: 22,
+  opacity: 0.9,
+  attribution: 'Ortofoto CWIS-06'
+});
+ortho.addTo(map); // atau masukkan ke layer control
 const REF=new Set(['MHJ_06_02_0150','MH-0282']);
 const isRef=p=>REF.has(p.manhole_id)||p.is_reference===true||p.is_reference==='true';
 let PIPES,MH,IDX=[],hits=[],sel=-1,hl=null,cMode='method';
