@@ -88,7 +88,7 @@ map.on('popupopen',()=>{seek=false});map.on('popupclose',()=>{if(!seek)clearHl()
 $('tg').onclick=()=>{document.body.classList.toggle('min');setTimeout(()=>map.invalidateSize(),150)};
 $('th').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('th',t)}catch(e){}};
 map.createPane('po');map.getPane('po').style.zIndex=250;
-const ortho=L.tileLayer('tiles/ortho/{z}/{x}/{y}.png',{pane:'po',minZoom:14,maxNativeZoom:19,maxZoom:28,opacity:.9,attribution:'Ortofoto CWIS-06'});
+const ortho=L.tileLayer('tiles/ortho/{z}/{x}/{y}.jpg',{pane:'po',minZoom:14,maxNativeZoom:19,maxZoom:28,opacity:.9,attribution:'Ortofoto CWIS-06'});
 const BASES={osm:osm,carto:carto,esri:esri,ortho:L.layerGroup([osm,ortho]),none:null};let curBase='osm';
 function bmDraw(){$('bm').innerHTML='<div class="ly" style="grid-template-columns:1fr">'+[['osm','OpenStreetMap'],['carto','Peta terang polos (CARTO)'],['esri','Citra satelit (Esri)'],['ortho','Ortofoto CWIS-06 (di atas OSM)'],['none','Tanpa peta dasar']].map(([k,n])=>'<label><input type="radio" name="bm" value="'+k+'"'+(curBase===k?' checked':'')+'><span>'+n+'</span></label>').join('')+'</div>'}
 $('bm').addEventListener('change',e=>{const t=e.target;if(t.name==='bm'){Object.values(BASES).forEach(b=>b&&map.removeLayer(b));curBase=t.value;if(BASES[t.value])BASES[t.value].addTo(map)}});
